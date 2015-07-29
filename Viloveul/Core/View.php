@@ -52,13 +52,15 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	protected function load($__name, $__vars = array()) {
-		$__php = '.php';
 		$__parts = array_filter(explode('/', $__name), 'trim');
-		$__path = Configure::apppath().'/Views/'.implode('/', $__parts).$__php;
+		$__path = Configure::apppath().'/Views/'.implode('/', $__parts).'.php';
 
 		if ( is_file($__path) ) {
+
 			extract($__vars);
+
 			include $__path;
+
 		}
 	}
 
