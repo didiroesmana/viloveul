@@ -129,7 +129,7 @@ class Dispatcher {
 				function($args = array()) use($class, $method){
 					try {
 						$reflection = new ReflectionMethod($class, $method);
-						$reflection->invokeArgs(new $class, $args);
+						return $reflection->invokeArgs(new $class, $args);
 					} catch ( ReflectionException $e ) {
 						die($e->getMessage());
 					}
@@ -165,7 +165,7 @@ class Dispatcher {
 				function($args = array()) use($eClass, $eMethod){
 					try {
 						$reflection = new ReflectionMethod($eClass, $eMethod);
-						$reflection->invokeArgs(new $eClass, $args);
+						return $reflection->invokeArgs(new $eClass, $args);
 					} catch ( ReflectionException $e ) {
 						die($e->getMessage());
 					}

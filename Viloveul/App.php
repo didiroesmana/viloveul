@@ -40,7 +40,7 @@ class App {
 		self::$apppath = rtrim(str_replace('\\', '/', $apppath), '/');
 		self::$basedir = rtrim(str_replace('\\', '/', $basedir), '/');
 
-		spl_autoload_register(array(__CLASS__, 'autoload'));
+		spl_autoload_register(array(__CLASS__, 'autoload'), true, true);
 
 		Core\Configure::apppath(self::$apppath);
 		Core\Configure::basedir(self::$basedir);

@@ -24,6 +24,17 @@ abstract class Controller extends Object {
 	}
 
 	/**
+	 * To String
+	 * 
+	 * @access	public
+	 * @return	String classname
+	 */
+
+	public function __toString() {
+		return self::classname();
+	}
+
+	/**
 	 * Getter
 	 * 
 	 * @access	public
@@ -45,7 +56,7 @@ abstract class Controller extends Object {
 	 * @return	String output
 	 */
 
-	public static function fire($requestSegment) {
+	public static function fire($requestSegment, $return = false) {
 		$request = preg_split('/\//', $requestSegment, -1, PREG_SPLIT_NO_EMPTY);
 		$method = 'action' . implode('', array_map('ucfirst', explode('-', array_shift($request))));
 
@@ -59,19 +70,18 @@ abstract class Controller extends Object {
 		}
 
 		try {
-			ob_start();
 
 			$ref = new ReflectionMethod($class, $method);
-			$ref->invokeArgs(self::$loadedControllers[$class], $request);
-			self::$loadedControllers[$class]->response->send();
-			$output = ob_get_clean();
+			$output = $ref->invokeArgs(self::$loadedControllers[$class], $request);
 
-			if ( is_null($output) ) {
-				return false;
+			if ( ! is_null($output) ) {
+				if ( true === $return )
+					return $output;
+
+				echo $output;
+
+				return true;
 			}
-
-			echo $output;
-			return true;
 
 		} catch (ReflectionException $e) {
 			die( $e->getMessage() );

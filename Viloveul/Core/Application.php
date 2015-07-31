@@ -224,8 +224,8 @@ class Application implements ArrayAccess {
 		try {
 
 			$reflection = new ReflectionFunction($handler);
-			$reflection->invoke($this->dispatcher->fetchVars());
-			$this->response->send();
+			$output = $reflection->invoke($this->dispatcher->fetchVars());
+			$this->response->send($output);
 
 		} catch (ReflectionException $e) {
 			die($e->getMessage());

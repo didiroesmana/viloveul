@@ -15,8 +15,6 @@ class View extends Object implements ArrayAccess {
 
 	protected $vars = array();
 
-	protected $useLayout = false;
-
 	/**
 	 * Constructor
 	 * 
@@ -25,75 +23,48 @@ class View extends Object implements ArrayAccess {
 	 * @param	Array vars
 	 */
 
-	public function __construct($filename, $vars = array()) {
+	public function __construct($filename, array $vars = array()) {
 		$this->filename = $filename;
 		is_array($vars) && $this->set($vars);
 	}
 
 	/**
-	 * Getter
+	 * To String
 	 * 
 	 * @access	public
-	 * @return	Any in Application::instance() properties
+	 * @return	String rendered output
 	 */
 
-	public function __get($var) {
-		$app =& Application::currentInstance();
-		return $app[$var];
+	public function __toString() {
+		return $this->render();
 	}
 
 	/**
-	 * load
-	 * 
-	 * @access	protected
-	 * @param	String filename
-	 * @param	Array merge variable
-	 * @return	void
-	 */
-
-	protected function load($__name, $__vars = array()) {
-		$__php = '.php';
-		$__parts = array_filter(explode('/', $__name), 'trim');
-		$__path = Configure::apppath().'/Views/'.implode('/', $__parts).$__php;
-
-		if ( is_file($__path) ) {
-			extract($__vars);
-			include $__path;
-		}
-	}
-
-	/**
-	 * buffer
+	 * make
 	 * 
 	 * @access	public
-	 * @return	String buffered output
+	 * @param	[mixed] data paramters
+	 * @return	String rendered output
 	 */
 
-	public function buffer() {
-
-		if ( ! $this->filename ) {
-			return '';
-		}
-
-		ob_start();
-
-		$this->load($this->filename, $this->vars);
-
-		$__html = ob_get_contents();
-
-		ob_end_clean();
-
-		return $__html;
+	public static function make($name, array $vars = array()) {
+		return self::createInstance($name, $vars)->render();
 	}
 
 	/**
 	 * render
 	 * 
 	 * @access	public
+	 * @param	Callable Callback
+	 * @return	String rendered output
 	 */
 
-	public function render() {
-		$this->response->setOutput($this->buffer(), true);
+	public function render($callbackFilter = null) {
+		$output = $this->load($this->filename, $this->vars);
+
+		return is_callable($callbackFilter) ?
+			call_user_func($callbackFilter, $output, $this) :
+				$output;
 	}
 
 	/**
@@ -169,15 +140,29 @@ class View extends Object implements ArrayAccess {
 	}
 
 	/**
-	 * make
+	 * load
 	 * 
-	 * @access	public
-	 * @param	[mixed] data paramters
-	 * @return	String buffered output
+	 * @access	protected
+	 * @param	String filename
+	 * @param	Array merge variable
+	 * @return	void
 	 */
 
-	public static function make($name, array $vars = array()) {
-		return self::createInstance($name, $vars)->buffer();
+	protected function load($__name, $__vars = array()) {
+		$__parts = array_filter(explode('/', $__name), 'trim');
+		$__path = Configure::apppath().'/Views/'.implode('/', $__parts).'.php';
+
+		if ( ! is_file($__path) ) {
+			return '';
+		}
+
+		ob_start();
+		extract($__vars);
+		include $__path;
+		$__html = ob_get_contents();
+		ob_end_clean();
+
+		return $__html;
 	}
 
 }

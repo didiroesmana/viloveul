@@ -53,7 +53,12 @@ class Response {
 	 */
 
 	public function setOutput($data, $apppend = false) {
-		$this->output = (true === $apppend) ? ($this->output . $data) : $data;
+		$output = (string) $data;
+
+		$this->output = (true === $apppend) ?
+			($this->output.$output) :
+				$output;
+
 		return $this;
 	}
 
@@ -74,10 +79,17 @@ class Response {
 	 * @access	public
 	 */
 
-	public function send() {
+	public function send($data = null) {
+		is_null($data) or $this->setOutput($data, true);
+
 		if ( ! headers_sent() ) {
 
-			$headers = array_map("unserialize", array_unique(array_map("serialize", $this->headers)));
+			$headers = array_map(
+				'unserialize',
+				array_unique(
+					array_map('serialize', $this->headers)
+				)
+			);
 
 			foreach ( $headers as $header ) {
 				header($header[0], $header[1]);
@@ -86,9 +98,11 @@ class Response {
 			@header('Content-Type: ' . $this->contentType, true);
 		}
 
-		echo $this->getOutput();
+		$output = $this->getOutput();
 
 		$this->clear();
+
+		print $output;
 	}
 
 	/**
@@ -99,6 +113,7 @@ class Response {
 
 	public function clear() {
 		$this->output = '';
+		$this->contentType = 'text/html';
 		$this->headers = array();
 	}
 
@@ -115,8 +130,12 @@ class Response {
 			Configure::siteurl($target) :
 				$target;
 
-		header("Location: {$url}");
-		exit();
+		if ( ! headers_sent() ) {
+			header("Location: {$url}");
+			exit();
+		}
+
+		printf('<script type="text/javascript">window.location.href = "%s";</script>', $url);
 	}
 
 }
