@@ -22,7 +22,7 @@ class Configure {
 	 */
 
 	public static function __callStatic($calledName, $params) {
-		if ( ! isset(self::$definedGlobals[$calledName]) ) {
+		if ( ! array_key_exists($calledName, self::$definedGlobals) ) {
 			return isset($params[0]) ? $params[0] : null;
 		}
 
@@ -175,7 +175,7 @@ class Configure {
 
 	public static function get($name, $filter = null) {
 		if ( ! isset(self::$configs[$name]) ) {
-			self::$configs[$name] = isset(self::$definedGlobals[$name]) ?
+			self::$configs[$name] = array_key_exists($name, self::$definedGlobals) ?
 				self::$definedGlobals[$name] :
 					self::load($name);
 		}
@@ -194,7 +194,7 @@ class Configure {
 	 */
 
 	public static function set($name, $value, $overwrite = false) {
-		if ( ! isset(self::$configs[$name]) || true === $overwrite ) {
+		if ( ! array_key_exists($name, self::$configs) || true === $overwrite ) {
 			self::$configs[$name] = $value;
 		}
 	}
