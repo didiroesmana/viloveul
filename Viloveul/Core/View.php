@@ -15,6 +15,8 @@ class View extends Object implements ArrayAccess {
 
 	protected $vars = array();
 
+	protected $directory = null;
+
 	/**
 	 * Constructor
 	 * 
@@ -49,6 +51,21 @@ class View extends Object implements ArrayAccess {
 
 	public static function make($name, array $vars = array()) {
 		return self::createInstance($name, $vars)->render();
+	}
+
+	/**
+	 * withDirectory
+	 * 
+	 * @access	public
+	 * @param	String realpath
+	 * @return	void
+	 */
+
+	public function withDirectory($path) {
+		if ( is_dir($path) ) {
+			$this->directory = rtrim(realpath($path), '/');
+		}
+		return $this;
 	}
 
 	/**
@@ -149,17 +166,23 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	protected function load($__name, $__vars = array()) {
-		$__parts = array_filter(explode('/', $__name), 'trim');
-		$__path = Configure::apppath().'/Views/'.implode('/', $__parts).'.php';
+		$__dir = is_null($this->directory) ?
+			(Configure::apppath().'/Views') :
+				$this->directory;
 
-		if ( ! is_file($__path) ) {
+		$__parts = array_filter(explode('/', $__name), 'trim');
+		$__file = $__dir.'/'.implode('/', $__parts).'.php';
+
+		if ( ! is_file($__file) ) {
 			return '';
 		}
 
 		ob_start();
-		extract($__vars);
-		include $__path;
-		$__html = ob_get_contents();
+			extract($__vars);
+
+			include $__file;
+
+			$__html = ob_get_contents();
 		ob_end_clean();
 
 		return $__html;

@@ -1,12 +1,13 @@
 # viloveul
 mini php mvc with url-routing
 
-## example to use
+### example to use :
+
+```php
 
 require_once 'viloveul/Viloveul/App.php';
 
-```php
-$app = Viloveul\App::serve(__DIR__);
+$app = Viloveul\App::serve($applicationDirectory);
 
 $app->handle('/', function() {
     return "Hello World";

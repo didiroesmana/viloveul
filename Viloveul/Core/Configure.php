@@ -10,40 +10,52 @@ class Configure {
 
 	protected static $configs = array();
 
+	private static $definedGlobals = array();
+
 	/**
-	 * basedir
+	 * Call Statically
 	 * 
 	 * @access	public
-	 * @param	String base directory (only for first time)
-	 * @return	String base directory
+	 * @param	String name
+	 * @param	Array arguments
+	 * @return	Any
 	 */
 
-	public static function basedir($dir = null) {
-		static $basedir = null;
-
-		if ( is_null($basedir) && is_dir($dir) ) {
-			$basedir = $dir;
+	public static function __callStatic($calledName, $params) {
+		if ( ! isset(self::$definedGlobals[$calledName]) ) {
+			return isset($params[0]) ? $params[0] : null;
 		}
 
-		return $basedir;
+		$data = self::$definedGlobals[$calledName];
+
+		if ( is_array($data) ) {
+			foreach ( $params as $key ) {
+				if ( isset($data[$key]) ) {
+					$data = $data[$key];
+				}
+			}
+		}
+
+		return $data;
 	}
 
 	/**
-	 * apppath
+	 * useBaseSettings
 	 * 
 	 * @access	public
-	 * @param	String application path (only for first time)
-	 * @return	String application path
+	 * @param	Array private settings
 	 */
 
-	public static function apppath($path = null) {
-		static $apppath = null;
-
-		if ( is_null($apppath) && is_dir($path) ) {
-			$apppath = $path;
+	public static function useBaseSettings($data, $value = null) {
+		if ( ! is_array($data) ) {
+			return self::useBaseSettings(array($data => $value));
 		}
 
-		return $apppath;
+		foreach ( $data as $key => $val ) {
+			if ( ! isset(self::$definedGlobals[$key]) ) {
+				self::$definedGlobals[$key] = $val;
+			}
+		}
 	}
 
 	/**
@@ -163,7 +175,9 @@ class Configure {
 
 	public static function get($name, $filter = null) {
 		if ( ! isset(self::$configs[$name]) ) {
-			self::$configs[$name] = self::load($name);
+			self::$configs[$name] = isset(self::$definedGlobals[$name]) ?
+				self::$definedGlobals[$name] :
+					self::load($name);
 		}
 
 		return is_callable($filter) ?

@@ -115,7 +115,7 @@ class Dispatcher {
 	 * Validate
 	 * 
 	 * @access	protected
-	 * @param	Array routed segments
+	 * @param	String request
 	 */
 
 	protected function validate($request) {
@@ -180,7 +180,7 @@ class Dispatcher {
 	 * createSection
 	 * 
 	 * @access	protected
-	 * @param	Array section (the mean is routed segments)
+	 * @param	String request
 	 * @return	Array verified sections
 	 */
 

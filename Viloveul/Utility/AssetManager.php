@@ -24,8 +24,10 @@ class AssetManager {
 	public static function load($type, $id, $source) {
 		$key = "{$id}-{$type}";
 
+		// make sure the source is only printed one at once time
+
 		if ( in_array($key, self::$loadedScripts) ) {
-			return false;
+			return null;
 		}
 
 		array_push(self::$loadedScripts, $key);
@@ -33,7 +35,6 @@ class AssetManager {
 		$format = ($type == 'css') ?
 			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
 				'<script type="text/javascript" id="%s" src="%s"></script>';
-
 		printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
 	}
 
