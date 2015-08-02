@@ -5,6 +5,7 @@ mini php mvc with url-routing
 
 require_once 'viloveul/Viloveul/App.php';
 
+```php
 $app = Viloveul\App::serve(__DIR__);
 
 $app->handle('/', function() {
@@ -12,3 +13,4 @@ $app->handle('/', function() {
 });
 
 $app->run();
+```
