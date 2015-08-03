@@ -24,6 +24,8 @@ class Inflector extends Object {
 
 	protected $word;
 
+	protected $origin;
+
 	/**
 	 * Constructor
 	 * 
@@ -32,7 +34,7 @@ class Inflector extends Object {
 	 */
 
 	public function __construct($word) {
-		$this->word = $word;
+		$this->word = $this->origin = $word;
 	}
 
 	/**
@@ -54,13 +56,12 @@ class Inflector extends Object {
 	 * @return	Object|String
 	 */
 
-	public function toCamelize($currentSeparator = '_') {
-		$words = $this->word;
-		if ( ! empty($currentSeparator) ) {
-			$words = ucwords(str_replace($currentSeparator, ' ', $words));
+	public function toCamelize($separator = null) {
+		$seps = array('-', '_');
+		if ( ! is_null($separator) ) {
+			$seps = func_get_args();
 		}
-		$words = ucwords(str_replace($currentSeparator, ' ', $words));
-
+		$words = ucwords(str_replace($seps, ' ', $this->word));
 		$this->word = str_replace(' ', '', $words);
 		return $this;
 	}
@@ -73,8 +74,9 @@ class Inflector extends Object {
 	 * @return	Object|String
 	 */
 
-	public function toSlug($separator = '-') {
-		$this->word = preg_replace('#[^a-z0-9\-\.\:]+#', $separator, $this->lowercase());
+	public function toSlug($separator, $lowercase = true) {
+		$word = (true === $lowercase) ? $this->lowercase() : $this->word;
+		$this->word = preg_replace('#[^a-z0-9\-\.\:]+#', $separator, $word);
 		return $this;
 	}
 
@@ -86,7 +88,7 @@ class Inflector extends Object {
 	 */
 
 	public function toUnderscore() {
-		$this->word = preg_replace('/[\s]+/', '_', $this->lowercase());
+		$this->word = preg_replace('/[\s]+/', '_', $this->word);
 		return $this;
 	}
 

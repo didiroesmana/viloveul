@@ -8,6 +8,7 @@
 
 use Viloveul\Core\Configure;
 use Viloveul\Core\Object;
+use Viloveul\Http\Request;
 
 class Anchor extends Object {
 
@@ -15,13 +16,15 @@ class Anchor extends Object {
 
 	protected $text;
 
+	protected $autoActive = false;
+
 	/**
 	 * Constructor
 	 */
 
 	public function __construct($href, $text = null, array $attributes = array()) {
 		$this->href = $href;
-		$this->text = $text;
+		$this->text = empty($text) ? $href : $text;
 	}
 
 	/**
@@ -43,12 +46,39 @@ class Anchor extends Object {
 		if ($this->href == '#') {
 			$href = '#';
 		} else {
-			$href = !preg_match('#^\W\:\/\/#', $this->href) ?
+			$href = !preg_match('#^\w+\:\/\/#', $this->href) ?
 				Configure::siteurl($this->href) :
 					$this->href;
 		}
 
 		$html = '<a href="' . $href . '"';
+
+		if ( $this->autoActive === true ) {
+			if ( $href == Request::currenturl() ) {
+				$this->classes[] = 'active';
+			}
+		}
+
+		if ( $this->classes ) {
+			$classes = array_filter($this->classes, 'trim');
+			$html .= ' class="' . implode(' ', $classes) . '"';
+		}
+
+		$html .= '>' . $this->text . '</a>';
+		return $html;
+	}
+
+	/**
+	 * attrId
+	 * 
+	 * @access	public
+	 * @param	String html id
+	 * @return	void
+	 */
+
+	public function attrId($data) {
+		$this->id = $data;
+		return $this;
 	}
 
 	/**
@@ -56,6 +86,7 @@ class Anchor extends Object {
 	 * 
 	 * @access	public
 	 * @param	String|Array classes
+	 * @return	void
 	 */
 
 	public function attrClass($data) {
@@ -68,8 +99,19 @@ class Anchor extends Object {
 		return $this;
 	}
 
-	public function attrId($data) {
-		$this->id = $data;
+	/**
+	 * autoActiveClass
+	 * 
+	 * @access	public
+	 * @param	Boolean
+	 * @return	void
+	 */
+
+	public function autoActiveClass($value) {
+		if ( is_boolean($value) ) {
+			$this->autoActive = $value;
+		}
+		return $this;
 	}
 
 	/**

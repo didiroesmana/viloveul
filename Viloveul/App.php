@@ -45,7 +45,8 @@ class App {
 		Core\Configure::useBaseSettings(
 			array(
 				'apppath' => self::$apppath,
-				'basedir' => self::$basedir
+				'basedir' => self::$basedir,
+				'urlsuffix' => (defined('URL_SUFFIX') ? URL_SUFFIX : '')
 			)
 		);
 

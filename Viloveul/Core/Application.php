@@ -213,7 +213,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function run() {
-		$this->dispatcher->dispatch(Http\Request::createFromGlobals());
+		$this->dispatcher->dispatch(Http\Request::createFromGlobals(), Configure::urlsuffix());
 
 		$handler = $this->dispatcher->fetchHandler();
 

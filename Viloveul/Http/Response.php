@@ -126,7 +126,7 @@ class Response {
 	 */
 
 	public static function redirect($target) {
-		$url = !preg_match('#^(\w+)\:\/\/#', $target) ?
+		$url = !preg_match('#^\w+\:\/\/#', $target) ?
 			Configure::siteurl($target) :
 				$target;
 

@@ -21,7 +21,9 @@ class Session implements ArrayAccess {
 
 		session_name($this->sessionName);
 
-		@session_start();
+		register_shutdown_function('session_write_close');
+
+		session_start();
 
 		if ( ! isset($_SESSION['__vars']) ) {
 			$_SESSION['__vars'] = array();
