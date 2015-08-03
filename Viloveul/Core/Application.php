@@ -62,7 +62,7 @@ class Application implements ArrayAccess {
 		});
 
 		$this['dispatcher'] = $this->share(function($c){
-			return new Router\Dispatcher($c['routes']);
+			return new Router\Dispatcher($c['routes'], Configure::apppath() . '/Controllers');
 		});
 
 		$this['routes'] = $this->share(function($c){

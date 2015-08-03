@@ -6,7 +6,6 @@
  * @subpackage	Router
  */
 
-use Viloveul\Core\Configure;
 use ReflectionMethod;
 use ReflectionException;
 
@@ -20,6 +19,8 @@ class Dispatcher {
 
 	protected $nsClass = "App\\Controllers\\";
 
+	protected $controllerDirectory;
+
 	/**
 	 * Constructor
 	 * 
@@ -27,8 +28,9 @@ class Dispatcher {
 	 * @param	ArrayAccess instanceof \Viloveul\Core\RouteCollection
 	 */
 
-	public function __construct(RouteCollection $routes) {
+	public function __construct(RouteCollection $routes, $controllerDirectory) {
 		$this->routes = $routes;
+		$this->controllerDirectory = realpath($controllerDirectory);
 	}
 
 	/**
@@ -190,12 +192,12 @@ class Dispatcher {
 		if ( ! empty($sections) ) {
 
 			$ns = $this->nsClass;
-			$path = Configure::apppath() . '/Controllers';
+			$path = $this->controllerDirectory;
 
 			do {
 
 				$name = implode('', array_map('ucfirst', explode('-', $sections[0])));
-				$path = "{$path}/{$name}";
+				$path .= "/{$name}";
 
 				if ( is_dir($path) && ! is_file("{$path}.php") ) {
 					$ns .= "{$name}\\";
