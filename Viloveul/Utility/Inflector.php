@@ -76,7 +76,7 @@ class Inflector extends Object {
 
 	public function toSlug($separator, $lowercase = true) {
 		$word = (true === $lowercase) ? $this->lowercase() : $this->word;
-		$this->word = preg_replace('#[^a-z0-9\-\.\:]+#', $separator, $word);
+		$this->word = preg_replace('#[^a-zA-Z0-9\-\.\:]+#', $separator, $word);
 		return $this;
 	}
 
@@ -88,7 +88,7 @@ class Inflector extends Object {
 	 */
 
 	public function toUnderscore() {
-		$this->word = preg_replace('/[\s]+/', '_', $this->word);
+		$this->word = str_replace(' ', '', preg_replace('/(?:\\w)([a-z]+)/', '_\\0', $this->word));
 		return $this;
 	}
 
@@ -123,6 +123,17 @@ class Inflector extends Object {
 	}
 
 	/**
+	 * showOrigin
+	 * 
+	 * @access	public
+	 * @return	String original word
+	 */
+
+	public function showOrigin() {
+		return $this->origin;
+	}
+
+	/**
 	 * convert
 	 * 
 	 * @access	public
@@ -131,7 +142,7 @@ class Inflector extends Object {
 	 */
 
 	public static function convert($word) {
-		return self::createInstance($word);
+		return parent::createInstance($word);
 	}
 
 }
