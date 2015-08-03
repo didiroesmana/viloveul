@@ -13,11 +13,11 @@ use ReflectionClass;
  * Example to use :
  * 
  * $word = "Hello World";
- * $newWord = \Viloveul\Utility\Inflector::convert($word)->toUnderscore();
+ * echo \Viloveul\Utility\Inflector::convert($word)->toUnderscore();
+ * ##Result is "Hello_World"
  * 
- * echo $newWord;
- * 
- * Result is "hello_world"
+ * echo \Viloveul\Utility\Inflector::convert($word)->toUnderscore()->lowercase();
+ * ##Result is "hello_world"
  */
 
 class Inflector extends Object {
@@ -88,7 +88,7 @@ class Inflector extends Object {
 	 */
 
 	public function toUnderscore() {
-		$this->word = str_replace(' ', '', preg_replace('/(?:\\w)([a-z]+)/', '_\\0', $this->word));
+		$this->word = trim(str_replace(' ', '', preg_replace('/(?:\\w)([a-z]+)/', '_\\0', $this->word)), '_');
 		return $this;
 	}
 
