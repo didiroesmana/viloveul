@@ -24,7 +24,7 @@ class Anchor extends Object {
 
 	protected $dataAttributes = array();
 
-	protected $idAttribute;
+	protected $attrID;
 
 	/**
 	 * Constructor
@@ -66,8 +66,8 @@ class Anchor extends Object {
 
 		$html = '<a href="' . $src . '" title="' . $title . '"';
 
-		if ( ! empty($this->idAttribute) ) {
-			$html .= sprintf(' id="%s"', $this->idAttribute);
+		if ( ! empty($this->attrID) ) {
+			$html .= sprintf(' id="%s"', $this->attrID);
 		}
 
 		if ( $this->autoActive === true ) {
@@ -83,7 +83,9 @@ class Anchor extends Object {
 
 		if ( ! empty($this->dataAttributes) ) {
 			foreach ( $this->dataAttributes as $attrK => $attrV ) {
-				$html .= sprintf(' data-%s="%s"', $attrK, $attrV);
+				if ( ! is_null($attrV) ) {
+					$html .= sprintf(' data-%s="%s"', $attrK, $attrV);
+				}
 			}
 		}
 
@@ -99,8 +101,8 @@ class Anchor extends Object {
 	 * @return	void
 	 */
 
-	public function id($id) {
-		$this->idAttribute = $id;
+	public function id($attrID) {
+		$this->attrID = $attrID;
 		return $this;
 	}
 
