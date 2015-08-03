@@ -12,19 +12,28 @@ use Viloveul\Http\Request;
 
 class Anchor extends Object {
 
-	protected $href = '#';
+	protected $src = '#';
 
-	protected $text;
+	protected $text = '';
+
+	protected $title = '';
 
 	protected $autoActive = false;
+
+	protected $classes = array();
+
+	protected $dataAttributes = array();
+
+	protected $idAttribute;
 
 	/**
 	 * Constructor
 	 */
 
-	public function __construct($href, $text = null, array $attributes = array()) {
-		$this->href = $href;
-		$this->text = empty($text) ? $href : $text;
+	public function __construct($src, $text = null, $title = null) {
+		$this->src = $src;
+		$this->text = $text;
+		$this->title = $title;
 	}
 
 	/**
@@ -43,15 +52,23 @@ class Anchor extends Object {
 	 */
 
 	public function show() {
-		if ($this->href == '#') {
-			$href = '#';
+		if ($this->src == '#') {
+			$src = '#';
 		} else {
-			$href = !preg_match('#^\w+\:\/\/#', $this->href) ?
-				Configure::siteurl($this->href) :
-					$this->href;
+			$src = !preg_match('#^\w+\:\/\/#', $this->src) ?
+				Configure::siteurl($this->src) :
+					$this->src;
 		}
 
-		$html = '<a href="' . $href . '"';
+		$text = empty($this->text) ? $src : $this->text;
+
+		$title = empty($this->title) ? $text : $this->title;
+
+		$html = '<a href="' . $src . '" title="' . $title . '"';
+
+		if ( ! empty($this->idAttribute) ) {
+			$html .= sprintf(' id="%s"', $this->idAttribute);
+		}
 
 		if ( $this->autoActive === true ) {
 			if ( $href == Request::currenturl() ) {
@@ -64,37 +81,79 @@ class Anchor extends Object {
 			$html .= ' class="' . implode(' ', $classes) . '"';
 		}
 
-		$html .= '>' . $this->text . '</a>';
+		if ( ! empty($this->dataAttributes) ) {
+			foreach ( $this->dataAttributes as $attrK => $attrV ) {
+				$html .= sprintf(' data-%s="%s"', $attrK, $attrV);
+			}
+		}
+
+		$html .= '>' . $text . '</a>';
 		return $html;
 	}
 
 	/**
-	 * attrId
+	 * id
 	 * 
 	 * @access	public
 	 * @param	String html id
 	 * @return	void
 	 */
 
-	public function attrId($data) {
-		$this->id = $data;
+	public function id($id) {
+		$this->idAttribute = $id;
 		return $this;
 	}
 
 	/**
-	 * attrClass
+	 * addClass
 	 * 
 	 * @access	public
-	 * @param	String|Array classes
+	 * @param	String class
+	 * @param	[mixed] String classes
 	 * @return	void
 	 */
 
-	public function attrClass($data) {
-		if ( is_string($data) ) {
-			return $this->attrClass(explode(' ', $data));
-		}
-		foreach ( (array) $data as $value ) {
+	public function addClass($class) {
+		$params = func_get_args();
+		foreach ( (array) $params as $value ) {
 			$this->classes[] = $value;
+		}
+		return $this;
+	}
+
+	/**
+	 * removeClass
+	 * 
+	 * @access	public
+	 * @param	String class
+	 * @param	[mixed] String classes
+	 * @return	void
+	 */
+
+	public function removeClass($class) {
+		if ( $classes = $this->classes ) {
+			$params = func_get_args();
+			$this->classes = array_diff($classes, $params);
+		}
+		return $this;
+	}
+
+	/**
+	 * data
+	 * 
+	 * @access	public
+	 * @param	String name
+	 * @param	String value
+	 * @return	void
+	 */
+
+	public function data($name, $value = null) {
+		if ( is_string($name) ) {
+			return $this->data(array($name => $value));
+		}
+
+		foreach ( (array) $name as $key => $val ) {
+			$this->dataAttributes[$key] = $val;
 		}
 		return $this;
 	}
@@ -122,8 +181,8 @@ class Anchor extends Object {
 	 * @return	Object class
 	 */
 
-	public static function create($href, $text = null, array $attributes = array()) {
-		return self::createInstance($href, $text);
+	public static function create($src, $text = null, $title = null) {
+		return self::createInstance($src, $text, $title);
 	}
 
 }
