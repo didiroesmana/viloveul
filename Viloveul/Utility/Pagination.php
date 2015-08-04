@@ -41,6 +41,10 @@ class Pagination {
 		'qs' => false
 	);
 
+	protected $beforeLink = '';
+
+	protected $afterLink = '';
+
 	/**
 	 * Constructor
 	 * 
@@ -104,53 +108,55 @@ class Pagination {
 
 		$output = '';
 
-		$beforeLink = array_shift($params);
-		$afterLink = array_shift($params);
+		$this->beforeLink = array_shift($params);
+		$this->afterLink = array_shift($params);
 
 		if ( false === $qs ) {
-			$baseUrl = rtrim($base, '/') . '/page/';
+			$baseurl = rtrim($base, '/') . '/page/';
 		} else {
-			$baseUrl = (strpos($base, '?') !== false) ? $base.'&page=' : rtrim($base, '/').'/?page=';
+			$baseurl = (strpos($base, '?') !== false) ? $base.'&page=' : rtrim($base, '/').'/?page=';
 		}
 
-		$first = $beforeLink.str_replace(
-			array(':link', ':number', ':class'),
-			array($baseUrl.'1', $firstlink, 'first'),
-			$format
-		).$afterLink;
-
-		$last = $beforeLink.str_replace(
-			array(':link', ':number', ':class'),
-			array($baseUrl.$end, $lastlink, 'last'),
-			$format
-		).$afterLink;
-
+		$first = $this->createElement($format, $baseurl.'1', $firstlink, 'first-page');
 		if ( $start > 1 ) {
-			$output .= str_replace(
-				array(':link', ':number', ':class'),
-				array('#', '...', 'disabled'),
-				$beforeLink.$format.$afterLink
-			);
+			$first .= $this->createElement($format, '#', '...', 'disabled');
 		}
 
-		for ( $i = $start; $i <= $end; $i++ ) {
-			$class = ($i == $current) ? 'active' : '';
-			$output .= str_replace(
-				array(':link', ':number', ':class'),
-				array($baseUrl.$i, $i, $class),
-				$beforeLink.$format.$afterLink
-			);
-		}
-
+		$last = $this->createElement($format, $baseurl.$end, $lastlink, 'last-page');
 		if ( $end != $totalPages ) {
-			$output .= str_replace(
-				array(':link', ':number', ':class'),
-				array('#', '...', 'disabled'),
-				$beforeLink.$format.$afterLink
+			$last = $this->createElement($format, '#', '...', 'disabled') . $last;
+		}
+
+		for ( $numberPage = $start; $numberPage <= $end; $numberPage++ ) {
+			$output .= $this->createElement(
+				$format,
+				$baseurl.$numberPage,
+				$numberPage,
+				(($numberPage == $current) ? 'active' : '')
 			);
 		}
+
 
 		return $before.$first.$output.$last.$after;
+	}
+
+	/**
+	 * createElement
+	 * 
+	 * @access	protected
+	 * @param	String format
+	 * @param	String url
+	 * @param	String text
+	 * @param	String classes
+	 * @return	String a-element
+	 */
+
+	protected function createElement($format, $url, $text, $classes) {
+		return str_replace(
+			array(':link', ':number', ':class'),
+			array($url, $text, $classes),
+			$this->beforeLink.$format.$this->afterLink
+		);
 	}
 
 }
