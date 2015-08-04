@@ -33,7 +33,7 @@ class Anchor extends Object {
 		$this->text = $text;
 
 		if ( is_array($param) ) {
-			$this->htmlAttribute->addAttr($param);
+			$this->addAttr($param);
 		} else {
 			$this->title = $param;
 		}

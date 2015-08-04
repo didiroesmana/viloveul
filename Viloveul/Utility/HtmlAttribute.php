@@ -149,7 +149,8 @@ class HtmlAttribute {
 		}
 
 		if ( ! empty($this->classes) ) {
-			$attr .= ' class="' . implode(' ', array_unique($this->classes)) . '"';
+			$classes = array_filter($this->classes, 'trim');
+			$attr .= ' class="' . implode(' ', array_unique($classes)) . '"';
 		}
 
 		if ( ! empty($this->dataAttributes) ) {
