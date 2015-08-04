@@ -26,11 +26,17 @@ class Anchor extends Object {
 	 * Constructor
 	 */
 
-	public function __construct($src, $text = null, $title = null) {
+	public function __construct($src, $text = null, $param = null) {
+		$this->htmlAttribute = new HtmlAttribute();
+
 		$this->src = $src;
 		$this->text = $text;
-		$this->title = $title;
-		$this->htmlAttribute = new HtmlAttribute;
+
+		if ( is_array($param) ) {
+			$this->htmlAttribute->addAttr($param);
+		} else {
+			$this->title = $param;
+		}
 	}
 
 	/**
@@ -110,8 +116,8 @@ class Anchor extends Object {
 	 * @return	Object class
 	 */
 
-	public static function create($src, $text = null, $title = null) {
-		return self::createInstance($src, $text, $title);
+	public static function create($src, $text = null, $param = null) {
+		return self::createInstance($src, $text, $param);
 	}
 
 }

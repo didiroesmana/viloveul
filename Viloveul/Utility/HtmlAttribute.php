@@ -47,10 +47,8 @@ class HtmlAttribute {
 			if ( $data == 'data' ) {
 				$this->dataAttributes[$value] = (string) $param;
 			} elseif ( $data == 'class' ) {
-				$classes = is_array($value) ? $value : array_slice(func_get_args(), 1);
-				foreach ( $classes as $class ) {
-					$this->classes[] = $class;
-				}
+				$classes = is_null($param) ? $value : array_slice(func_get_args(), 1);
+				$this->addClass($classes);
 			} else {
 				$this->addAttr(array($data => $value));
 			}
@@ -60,7 +58,7 @@ class HtmlAttribute {
 		$attributes = (array) $data;
 
 		if ( isset($attributes['class']) ) {
-			$this->classes[] = $attributes['class'];
+			$this->addClass($attributes['class']);
 			unset($attributes['class']);
 		}
 
@@ -81,14 +79,56 @@ class HtmlAttribute {
 	 */
 
 	public function removeAttr($data, $part = null) {
-		if ( $data == 'data' && isset($this->dataAttributes[$part]) ) {
-			unset($this->dataAttributes[$part]);
+		if ( $data == 'data' ) {
+			if ( empty($part) ) {
+				$this->dataAttributes = array();
+			} elseif ( isset($this->dataAttributes[$part]) ) {
+				unset($this->dataAttributes[$part]);
+			}
 		} elseif ( $data == 'class' ) {
-			$this->classes = empty($part) ? array() : array_diff($this->classes, array_slice(func_get_args(), 1));
+			$this->classes = array();
 		} elseif ( isset($this->attributes[$data]) ) {
 			unset($this->attributes[$data]);
 		}
 
+		return $this;
+	}
+
+	/**
+	 * addClass
+	 * 
+	 * @access	public
+	 * @param	Array|String class
+	 * @param	[mixed]
+	 * @return	void
+	 */
+
+	public function addClass($value) {
+		if ( empty($value) )
+			return $this;
+
+		$classes = is_string($value) ? func_get_args() : (array) $value;
+		foreach ( $classes as $class ) {
+			$this->classes[] = (string) $class;
+		}
+		return $this;
+	}
+
+	/**
+	 * removeClass
+	 * 
+	 * @access	public
+	 * @param	Array|String class(es)
+	 * @param	[mixed]
+	 * @return	void
+	 */
+
+	public function removeClass($value) {
+		if ( empty($value) || empty($this->classes) )
+			return $this;
+
+		$classes = is_string($value) ? func_get_args() : (array) $value;
+		$this->classes = array_diff($this->classes, $classes);
 		return $this;
 	}
 
