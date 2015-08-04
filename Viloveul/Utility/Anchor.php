@@ -20,11 +20,7 @@ class Anchor extends Object {
 
 	protected $autoActive = false;
 
-	protected $classes = array();
-
-	protected $dataAttributes = array();
-
-	protected $attrID;
+	protected $htmlAttribute;
 
 	/**
 	 * Constructor
@@ -34,6 +30,7 @@ class Anchor extends Object {
 		$this->src = $src;
 		$this->text = $text;
 		$this->title = $title;
+		$this->htmlAttribute = new HtmlAttribute;
 	}
 
 	/**
@@ -42,6 +39,22 @@ class Anchor extends Object {
 
 	public function __toString() {
 		return $this->show();
+	}
+
+	/**
+	 * Call
+	 * 
+	 * @access	public
+	 * @param	String method name
+	 * @param	Array arguments
+	 * @return	void
+	 */
+
+	public function __call($method, $params) {
+		if ( method_exists($this->htmlAttribute, $method) ) {
+			call_user_func_array(array(&$this->htmlAttribute, $method), $params);
+		}
+		return $this;
 	}
 
 	/**
@@ -61,103 +74,17 @@ class Anchor extends Object {
 		}
 
 		$text = empty($this->text) ? $src : $this->text;
-
 		$title = empty($this->title) ? $text : $this->title;
-
-		$html = '<a href="' . $src . '" title="' . $title . '"';
-
-		if ( ! empty($this->attrID) ) {
-			$html .= sprintf(' id="%s"', $this->attrID);
-		}
 
 		if ( $this->autoActive === true ) {
 			if ( $href == Request::currenturl() ) {
-				$this->classes[] = 'active';
+				$this->addAttr('class', 'active');
 			}
 		}
 
-		if ( $this->classes ) {
-			$classes = array_filter($this->classes, 'trim');
-			$html .= ' class="' . implode(' ', $classes) . '"';
-		}
+		$this->addAttr('title', $title)->addAttr('href', $src);
 
-		if ( ! empty($this->dataAttributes) ) {
-			foreach ( $this->dataAttributes as $attrK => $attrV ) {
-				if ( ! is_null($attrV) ) {
-					$html .= sprintf(' data-%s="%s"', $attrK, $attrV);
-				}
-			}
-		}
-
-		$html .= '>' . $text . '</a>';
-		return $html;
-	}
-
-	/**
-	 * id
-	 * 
-	 * @access	public
-	 * @param	String html id
-	 * @return	void
-	 */
-
-	public function id($attrID) {
-		$this->attrID = $attrID;
-		return $this;
-	}
-
-	/**
-	 * addClass
-	 * 
-	 * @access	public
-	 * @param	String class
-	 * @param	[mixed] String classes
-	 * @return	void
-	 */
-
-	public function addClass($class) {
-		$params = func_get_args();
-		foreach ( (array) $params as $value ) {
-			$this->classes[] = $value;
-		}
-		return $this;
-	}
-
-	/**
-	 * removeClass
-	 * 
-	 * @access	public
-	 * @param	String class
-	 * @param	[mixed] String classes
-	 * @return	void
-	 */
-
-	public function removeClass($class) {
-		if ( $classes = $this->classes ) {
-			$params = func_get_args();
-			$this->classes = array_diff($classes, $params);
-		}
-		return $this;
-	}
-
-	/**
-	 * data
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	String value
-	 * @return	void
-	 */
-
-	public function data($name, $value = null) {
-		if ( is_string($name) ) {
-			return $this->data(array($name => $value));
-		}
-
-		foreach ( (array) $name as $key => $val ) {
-			$this->dataAttributes[$key] = $val;
-		}
-		return $this;
+		return "<a{$this->htmlAttribute}>{$text}</a>";
 	}
 
 	/**

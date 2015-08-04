@@ -6,6 +6,7 @@
  * @subpackage	Router
  */
 
+use Exception;
 use ReflectionMethod;
 use ReflectionException;
 
