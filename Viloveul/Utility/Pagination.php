@@ -86,7 +86,7 @@ class Pagination {
 		$afterLink = array_shift($params);
 
 		if ( false === $qs ) {
-			$baseUrl = rtrim($base, '/') . '/';
+			$baseUrl = rtrim($base, '/') . '/page/';
 		} else {
 			$baseUrl = (strpos($base, '?') !== false) ? $base.'&page=' : $base.'?page=';
 		}
