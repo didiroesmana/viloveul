@@ -7,6 +7,7 @@
  */
 
 use Viloveul\Database\Connector;
+use Viloveul\Database\IConnection;
 
 abstract class Model extends Object {
 
@@ -18,8 +19,8 @@ abstract class Model extends Object {
 	 * Constructor
 	 */
 
-	public function __construct() {
-		$this->db = Connector::getConnection();
+	public function __construct($connection = null) {
+		$this->db = ($connection instanceof IConnection) ? $connection : (Connector::getConnection());
 	}
 
 	/**
@@ -41,7 +42,7 @@ abstract class Model extends Object {
 		}
 
 		if ( ! isset(self::$modelCollections[$class]) ) {
-			self::$modelCollections[$class] = self::createInstance();
+			self::$modelCollections[$class] = self::createInstance($param);
 		}
 
 		return self::$modelCollections[$class];

@@ -17,6 +17,8 @@ class View extends Object implements ArrayAccess {
 
 	protected $directory = null;
 
+	protected static $globalVars = array();
+
 	/**
 	 * Constructor
 	 * 
@@ -54,14 +56,37 @@ class View extends Object implements ArrayAccess {
 	}
 
 	/**
-	 * withDirectory
+	 * withGlobalVar
+	 * 
+	 * @access	public
+	 * @param	String|Array var(s) name
+	 * @param	[mixed]
+	 * @return	void
+	 */
+
+	public static function withGlobalVar($data, $value = null) {
+		if ( is_string($data) ) {
+			return self::withGlobalVar(array($data => $value));
+		}
+
+		foreach ( (array) $data as $var => $val ) {
+			if ( is_null($val) && isset(self::$globalVars[$var]) ) {
+				unset(self::$globalVars[$var]);
+			} else {
+				self::$globalVars[$var] = $val;
+			}
+		}
+	}
+
+	/**
+	 * changeDirectory
 	 * 
 	 * @access	public
 	 * @param	String realpath
 	 * @return	void
 	 */
 
-	public function withDirectory($path) {
+	public function changeDirectory($path) {
 		if ( is_dir($path) ) {
 			$this->directory = rtrim(realpath($path), '/');
 		}
@@ -77,7 +102,9 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	public function render($callbackFilter = null) {
-		$output = $this->load($this->filename, $this->vars);
+		$allvars = array_merge(self::$globalVars, $this->vars);
+
+		$output = $this->load($this->filename, $allvars);
 
 		return is_callable($callbackFilter) ?
 			call_user_func($callbackFilter, $output, $this) :
@@ -96,6 +123,8 @@ class View extends Object implements ArrayAccess {
 	public function get($var, $defaultValue = null) {
 		if ( isset($this->vars[$var]) ) {
 			return $this->vars[$var];
+		} elseif ( isset(self::$globalVars[$var]) ) {
+			return self::$globalVars[$var];
 		}
 
 		return $defaultValue;
