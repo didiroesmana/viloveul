@@ -12,7 +12,7 @@
  * $configPagination = array(
  *    'total' => 30,                  // count all results
  *    'current' => 9,                 // current page : bisa pakek $_GET['page'],
- *    'perpage' => 3,
+ *    'perpage' => 3,                 // limit
  *    'qs' => true,                   // true for using query string or false for uri segment
  *    'base' => 'http://domain.com'   // output -> http://domain.com/?page=N or http://domain.com/page/N
  * );
