@@ -115,7 +115,8 @@ class Configure {
 
 		if ( ! empty($followed) && '/' != $followed ) {
 			$parts = explode('?', $followed);
-			$dynamic_url .= $parts[0].self::urlsuffix();
+			$urlsuffix = self::urlsuffix();
+			$dynamic_url .= (empty($urlsuffix) ? $parts[0] : rtrim($parts[0], '/').$urlsuffix);
 
 			if ( isset($parts[1]) && ! empty($parts[1]) ) {
 				$dynamic_url .= '?' . $parts[1];
