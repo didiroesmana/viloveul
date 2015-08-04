@@ -35,6 +35,8 @@ class Pagination {
 		'numlink' => 5,
 		'before' => '<ul>',
 		'after' => '</ul>',
+		'firstlink' => '&laquo;',
+		'lastlink' => '&raquo;',
 		'base' => '',
 		'qs' => false
 	);
@@ -113,13 +115,13 @@ class Pagination {
 
 		$first = $beforeLink.str_replace(
 			array(':link', ':number', ':class'),
-			array($baseUrl.'1', '&laquo;', 'first'),
+			array($baseUrl.'1', $firstlink, 'first'),
 			$format
 		).$afterLink;
 
 		$last = $beforeLink.str_replace(
 			array(':link', ':number', ':class'),
-			array($baseUrl.$end, '&raquo;', 'last'),
+			array($baseUrl.$end, $lastlink, 'last'),
 			$format
 		).$afterLink;
 
