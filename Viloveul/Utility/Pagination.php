@@ -6,6 +6,26 @@
  * @subpackage	Utility
  */
 
+/**
+ * Example :
+ * 
+ * $configPagination = array(
+ *    'total' => 30,					// count all results
+ *    'current' => 9,					// current page : bisa pakek $_GET['page'],
+ *    'perpage' => 3,
+ *    'qs' => true,						// true for using query string or false for uri segment
+ *    'base' => 'http://domain.com' 	// output -> http://domain.com/?page=N or http://domain.com/page/N
+ * );
+ * 
+ * $pagination = new Viloveul\Utility\Pagination($configPagination);
+ * $pagination->config('before', '<ul class="pagination pagination-md">')
+ * $pagination->config('after', '</ul>')
+ * 
+ * echo $pagination->display('<a href=":link" class=":class">:number</a>', '<li class=":class">', '</li>');
+ * 
+ * result : [<<] [...] [5] [6] [7] [8] [9] [10] [>>]
+ */
+
 class Pagination {
 
 	protected $configs = array(
@@ -88,7 +108,7 @@ class Pagination {
 		if ( false === $qs ) {
 			$baseUrl = rtrim($base, '/') . '/page/';
 		} else {
-			$baseUrl = (strpos($base, '?') !== false) ? $base.'&page=' : $base.'?page=';
+			$baseUrl = (strpos($base, '?') !== false) ? $base.'&page=' : rtrim($base, '/').'/?page=';
 		}
 
 		$first = $beforeLink.str_replace(
