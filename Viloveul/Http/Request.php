@@ -95,7 +95,7 @@ class Request {
 		if ( $method == 'cli' ) {
 			return defined('PHP_SAPI') && PHP_SAPI == 'cli';
 
-		} elseif ( $method == 'ajax' ) {
+		} elseif ( $method == 'ajax' || 'xhr' == $method ) {
 			return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
 		}
 

@@ -17,6 +17,16 @@ class Response {
 	protected $headers = array();
 
 	/**
+	 * Constructor
+	 * 
+	 * @access	public
+	 * @return	void
+	 */
+
+	public function __construct() {
+	}
+
+	/**
 	 * clear
 	 * 
 	 * @access	public
@@ -27,6 +37,11 @@ class Response {
 		$this->output = '';
 		$this->contentType = 'text/html';
 		$this->headers = array();
+
+		if ( 0 !== ob_get_level() ) {
+			ob_clean();
+		}
+
 		return $this;
 	}
 
