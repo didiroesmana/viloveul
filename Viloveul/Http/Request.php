@@ -125,9 +125,18 @@ class Request {
 	 */
 
 	public static function createFromGlobals() {
-		return self::isCli() ?
+		$request = self::isCli() ?
 			self::parseCommandLine() :
 				self::parseRequestUri();
+
+		if ( defined('INDEX_PAGE') && '' != INDEX_PAGE ) {
+			$index_page = trim(INDEX_PAGE);
+			if ( ! empty($index_page) && 0 === strpos($request, "/{$index_page}") ) {
+				$request = substr($request, strlen($index_page) + 1);
+			}
+		}
+
+		return $request;
 	}
 
 	/**

@@ -107,7 +107,7 @@ class Configure {
 		static $siteurl = null;
 
 		if ( is_null($siteurl) ) {
-			$index_page = defined('INDEX_PAGE') ? INDEX_PAGE : 'index.php';
+			$index_page = defined('INDEX_PAGE') ? trim(INDEX_PAGE, '/') : 'index.php';
 			$siteurl = rtrim(self::baseurl("/{$index_page}"), '/');
 		}
 
