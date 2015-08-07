@@ -10,11 +10,34 @@ use Viloveul\Core\Configure;
 
 class Response {
 
-	protected $output;
+	protected $output = '';
 
 	protected $contentType = 'text/html';
 
 	protected $headers = array();
+
+	/**
+	 * clear
+	 * 
+	 * @access	public
+	 * @return	void
+	 */
+
+	public function clear() {
+		$this->output = '';
+		$this->contentType = 'text/html';
+		$this->headers = array();
+		return $this;
+	}
+
+	/**
+	 * header
+	 * 
+	 * @access	public
+	 * @param	String header
+	 * @param	Boolean
+	 * @return	void
+	 */
 
 	public function header($header, $overwrite = true) {
 		$this->headers[] = array($header, $overwrite);
@@ -26,6 +49,7 @@ class Response {
 	 * 
 	 * @access	public
 	 * @param	String content_type
+	 * @return	void
 	 */
 
 	public function setContentType($contentType) {
@@ -50,6 +74,7 @@ class Response {
 	 * @access	public
 	 * @param	String data
 	 * @param	Boolean
+	 * @return	void
 	 */
 
 	public function setOutput($data, $apppend = false) {
@@ -77,6 +102,8 @@ class Response {
 	 * send
 	 * 
 	 * @access	public
+	 * @param	String output if any
+	 * @return	void
 	 */
 
 	public function send($data = null) {
@@ -103,18 +130,6 @@ class Response {
 		$this->clear();
 
 		print $output;
-	}
-
-	/**
-	 * clear
-	 * 
-	 * @access	public
-	 */
-
-	public function clear() {
-		$this->output = '';
-		$this->contentType = 'text/html';
-		$this->headers = array();
 	}
 
 	/**
