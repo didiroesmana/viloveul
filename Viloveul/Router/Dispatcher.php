@@ -189,11 +189,10 @@ class Dispatcher {
 
 	protected function createSection($request) {
 		$sections = $this->segmentToArray($request);
+		$path = $this->controllerDirectory;
+		$ns = $this->nsClass;
 
 		if ( ! empty($sections) ) {
-
-			$ns = $this->nsClass;
-			$path = $this->controllerDirectory;
 
 			do {
 

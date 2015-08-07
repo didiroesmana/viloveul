@@ -78,24 +78,18 @@ class App {
 			is_file($location) && require_once($location);
 
 		} elseif ( false === strpos($name, '/') ) {
-			$location = self::$apppath.'/Packages/'.$name;
-			$inloop = true;
+			$location = self::$apppath.'/Packages';
 
 			do {
 
-				$inloop = false;
+				$location .= '/'.$name;
 
 				if ( is_file($location.$php) ) {
-					require_once $location.$php;
-
-				} elseif ( is_dir($location) ) {
-					$inloop = true;
-					$location = $location.'/'.$name;
-
+					require_once($location.$php);
+					break;
 				}
 
-			} while ( true === $inloop );
-
+			} while ( is_dir($location) );
 		}
 	}
 }
