@@ -10,7 +10,7 @@ class Configure {
 
 	protected static $configs = array();
 
-	private static $definedGlobals = array();
+	private static $baseSettings = array();
 
 	/**
 	 * Call Statically
@@ -22,38 +22,34 @@ class Configure {
 	 */
 
 	public static function __callStatic($calledName, $params) {
-		if ( ! array_key_exists($calledName, self::$definedGlobals) ) {
+		if ( ! array_key_exists($calledName, self::$baseSettings) ) {
 			return isset($params[0]) ? $params[0] : null;
 		}
 
-		$data = self::$definedGlobals[$calledName];
-
-		if ( is_array($data) ) {
-			foreach ( $params as $key ) {
-				if ( isset($data[$key]) ) {
-					$data = $data[$key];
-				}
-			}
+		if ( isset($params[0]) && is_callable($params[0]) ) {
+			$handler = array_shift($params);
+			array_unshift($params, self::$baseSettings[$calledName]);
+			return call_user_func_array($handler, $params);
 		}
 
-		return $data;
+		return self::$baseSettings[$calledName];
 	}
 
 	/**
-	 * useBaseSettings
+	 * withBaseSettings
 	 * 
 	 * @access	public
 	 * @param	Array private settings
 	 */
 
-	public static function useBaseSettings($data, $value = null) {
+	public static function withBaseSettings($data, $value = null) {
 		if ( ! is_array($data) ) {
-			return self::useBaseSettings(array($data => $value));
+			return self::withBaseSettings(array($data => $value));
 		}
 
 		foreach ( $data as $key => $val ) {
-			if ( ! isset(self::$definedGlobals[$key]) ) {
-				self::$definedGlobals[$key] = $val;
+			if ( ! isset(self::$baseSettings[$key]) ) {
+				self::$baseSettings[$key] = $val;
 			}
 		}
 	}
@@ -176,8 +172,8 @@ class Configure {
 
 	public static function get($name, $filter = null) {
 		if ( ! isset(self::$configs[$name]) ) {
-			self::$configs[$name] = array_key_exists($name, self::$definedGlobals) ?
-				self::$definedGlobals[$name] :
+			self::$configs[$name] = array_key_exists($name, self::$baseSettings) ?
+				self::$baseSettings[$name] :
 					self::load($name);
 		}
 

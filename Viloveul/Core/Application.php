@@ -38,10 +38,7 @@ class Application implements ArrayAccess {
 			return Configure::get('settings', function($config) use ($defaultSettings){
 				$settings = is_array($config) ? $config : array();
 
-				return array_merge(
-					$defaultSettings,
-					$settings
-				);
+				return array_merge($defaultSettings, $settings);
 			});
 		});
 

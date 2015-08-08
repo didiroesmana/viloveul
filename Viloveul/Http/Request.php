@@ -208,7 +208,6 @@ class Request {
 
 			$_SERVER['QUERY_STRING'] = $query;
 			parse_str($_SERVER['QUERY_STRING'], $_GET);
-
 		}
 
 		return $request;

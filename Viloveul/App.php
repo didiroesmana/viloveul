@@ -42,7 +42,7 @@ class App {
 
 		spl_autoload_register(array(__CLASS__, 'autoload'), true, true);
 
-		Core\Configure::useBaseSettings(
+		Core\Configure::withBaseSettings(
 			array(
 				'apppath' => self::$apppath,
 				'basedir' => self::$basedir,
