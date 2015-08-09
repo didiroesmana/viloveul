@@ -138,7 +138,7 @@ class AssetManager {
 	 */
 
 	protected static function confirmLoaded($key, $autopush = false) {
-		if ( in_array($key, self::$loadedSources) ) {
+		if ( in_array($key, self::$loadedSources, false) ) {
 			return false;
 		} elseif ( true === $autopush ) {
 			array_push(self::$loadedSources, $key);
