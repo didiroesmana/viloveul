@@ -14,11 +14,58 @@ class RouteCollection implements ArrayAccess, Iterator {
     protected $collections = array();
 
 	/**
+	 * Constructor
+	 * 
+	 * @access	public
+	 * @param	Array routes
+	 * @return	void
+	 */
+
+	public function __construct($routes = array()) {
+		empty($routes) or $this->add($routes);
+	}
+
+	/**
+	 * add
+	 * 
+	 * @access	public
+	 * @param	String|Array
+	 * @param	String|Callable handler
+	 * @return	void
+	 */
+
+	public function add($data, $value = null) {
+		if ( is_string($data) ) {
+			return $this->add(array($data => $value));
+		}
+
+		foreach ( (array) $data as $key => $target ) {
+			if ( ! is_null($key) ) {
+				$this->collections[$key] = $target;
+			}
+		}
+
+		return $this;
+	}
+
+	/**
+	 * fetch
+	 * 
+	 * @access	public
+	 * @param	String name
+	 * @return	String|Callable handler
+	 */
+
+	public function fetch($key) {
+        return isset($this->collections[$key]) ? $this->collections[$key] : null;
+	}
+
+	/**
 	 * Implements of ArrayAccess
 	 */
 
 	public function offsetSet($key, $val) {
-		$this->collections[$key] = $val;
+		$this->add(array($key => $val));
 	}
 
 	/**
@@ -26,7 +73,7 @@ class RouteCollection implements ArrayAccess, Iterator {
 	 */
 
 	public function offsetGet($key) {
-        return isset($this->collections[$key]) ? $this->collections[$key] : null;
+        return $this->fetch($key);
 	}
 
 	/**
