@@ -67,28 +67,26 @@ class Configure {
 
 		if ( is_null($baseurl) ) {
 			if ( defined('BASEURL') && ('' != BASEURL || '/' != BASEURL) ) {
-				$baseurl = rtrim(BASEURL, '/');
+				$baseurl = rtrim(BASEURL, '/') . '/';
 			} else {
 				$host = self::server('http_host');
 				if ( $host != 'localhost' ) {
-					$baseurl = (self::supportHttps() ? 'https://' : 'http://') . $host;
+					$url = (self::supportHttps() ? 'https://' : 'http://') . $host;
 				} else {
-					$baseurl = 'http://localhost';
+					$url = 'http://localhost';
 				}
 				$script_name = self::server('script_name');
 				$base_script_filename = basename(self::server('script_filename'));
-				$baseurl .= substr($script_name, 0, strpos($script_name, $base_script_filename));
-				$baseurl = rtrim($baseurl, '/');
+				$url .= substr($script_name, 0, strpos($script_name, $base_script_filename));
+				$baseurl = rtrim($url, '/') . '/';
 			}
 		}
 
-		$static_url = $baseurl;
-
 		if ( ! empty($followed) && '/' != $followed ) {
-			$static_url .= $followed;
+			return $baseurl . ltrim($followed, '/');
 		}
 
-		return $static_url;
+		return $baseurl;
 	}
 
 	/**
