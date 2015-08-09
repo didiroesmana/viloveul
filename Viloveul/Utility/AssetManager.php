@@ -21,6 +21,7 @@ class AssetManager {
 	 * @param	String type
 	 * @param	String id
 	 * @param	String source target
+	 * @return	Boolean
 	 */
 
 	public static function load($type, $id, $source) {
@@ -28,16 +29,17 @@ class AssetManager {
 
 		// make sure the source is only printed one at once time
 
-		if ( in_array($key, self::$loadedSources) ) {
+		if ( ! self::confirmLoaded($key, true) ) {
 			return null;
 		}
-
-		array_push(self::$loadedSources, $key);
 
 		$format = ($type == 'css') ?
 			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
 				'<script type="text/javascript" id="%s" src="%s"></script>';
+
 		printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
+
+		return true;
 	}
 
 	/**
@@ -47,7 +49,7 @@ class AssetManager {
 	 * @param	String id
 	 * @param	String source
 	 * @param	[mixed] String type
-	 * @return	void
+	 * @return	Boolean
 	 */
 
 	public static function registerSource($id, $source, $type = null) {
@@ -59,7 +61,10 @@ class AssetManager {
 
 		if ( in_array($type, array('css', 'js'), true) ) {
 			self::$registeredSources["{$id}-{$type}"] = $source;
+			return true;
 		}
+
+		return false;
 	}
 
 	/**
@@ -68,7 +73,7 @@ class AssetManager {
 	 * @access	public
 	 * @param	String source id
 	 * @param	String|Array dependency(s)
-	 * @return	void
+	 * @return	Boolean
 	 */
 
 	public static function printStyle($id, $dependency = null) {
@@ -82,7 +87,7 @@ class AssetManager {
 	 * @param	String source id
 	 * @param	String|Array dependency(s)
 	 * @param	String type
-	 * @return	void
+	 * @return	Boolean
 	 */
 
 	public static function printScript($id, $dependency = null, $type = 'js') {
@@ -95,13 +100,11 @@ class AssetManager {
 		$key = "{$id}-{$type}";
 
 		if ( ! isset(self::$registeredSources[$key]) ) {
-			return false;
-		} elseif ( in_array($key, self::$loadedSources) ) {
 			return null;
+		} elseif ( ! self::confirmLoaded($key, true) ) {
+			return false;
 			
 		}
-
-		array_push(self::$loadedSources, $key);
 
 		if ( ! empty($dependencies) ) {
 			foreach ( $dependencies as $dependency_id ) {
@@ -113,7 +116,35 @@ class AssetManager {
 			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
 				'<script type="text/javascript" id="%s" src="%s"></script>';
 
-		printf("{$format}\n", $key, sprintf(self::$registeredSources[$key], rtrim(Configure::baseurl(), '/')));
+		printf(
+			"{$format}\n",
+			$key,
+			sprintf(
+				self::$registeredSources[$key],
+				rtrim(Configure::baseurl(), '/')
+			)
+		);
+
+		return true;
+	}
+
+	/**
+	 * confirmLoaded
+	 * 
+	 * @access	protected
+	 * @param	String key source
+	 * @param	Boolean autopush when not loaded
+	 * @return	Boolean
+	 */
+
+	protected static function confirmLoaded($key, $autopush = false) {
+		if ( in_array($key, self::$loadedSources) ) {
+			return false;
+		} elseif ( true === $autopush ) {
+			array_push(self::$loadedSources, $key);
+		}
+
+		return true;
 	}
 
 }
