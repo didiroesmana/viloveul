@@ -11,7 +11,7 @@ use Iterator;
 
 class RouteCollection implements ArrayAccess, Iterator {
 
-    protected $collections = array();
+	protected $collections = array();
 
 	/**
 	 * Constructor
@@ -57,7 +57,7 @@ class RouteCollection implements ArrayAccess, Iterator {
 	 */
 
 	public function fetch($key) {
-        return isset($this->collections[$key]) ? $this->collections[$key] : null;
+		return isset($this->collections[$key]) ? $this->collections[$key] : null;
 	}
 
 	/**
@@ -73,7 +73,7 @@ class RouteCollection implements ArrayAccess, Iterator {
 	 */
 
 	public function offsetGet($key) {
-        return $this->fetch($key);
+		return $this->fetch($key);
 	}
 
 	/**
