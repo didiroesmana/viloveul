@@ -241,14 +241,21 @@ class Validator {
 	 * check
 	 * 
 	 * @access	protected
-	 * @param	String field name
-	 * @param	String label
-	 * @param	String|Array rules
+	 * @param	Array|String field:label
+	 * @param	[mixed] Callable callback
+	 * @return	void
 	 */
 
-	public function check($field, $label, $validation) {
-		$callbacks = is_array($validation) ? $validation : array_filter(explode('|', $validation), 'trim');
-		$this->validationRules[$field] = compact('label', 'callbacks');
+	public function check($data, $callback) {
+		$params = is_string($data) ?
+			explode(':', $data, 2) :
+				array_values((array) $data);
+
+		$key = array_shift($params);
+		$label = isset($params[0]) ? $params[0] : ucfirst($key);
+		$callbacks = array_slice(func_get_args(), 1);
+
+		$this->validationRules[$key] = compact('label', 'callbacks');
 		return $this;
 	}
 
@@ -300,7 +307,7 @@ class Validator {
 			return true;
 		}
 
-		EventManager::addListener('validation_error', array($this, 'displayErrors'));
+		EventManager::addListener('validation_errors', array($this, 'displayErrors'));
 		return false;
 	}
 

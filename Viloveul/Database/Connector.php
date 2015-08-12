@@ -10,7 +10,7 @@ use Viloveul\Core\Configure;
 
 class Connector {
 
-	protected static $defaultConnection = 'default';
+	protected static $groupDefault = 'default';
 
 	protected static $connections = array();
 
@@ -52,25 +52,25 @@ class Connector {
 	}
 
 	/**
-	 * setDefaultConnection
+	 * groupDefaultSet
 	 * 
 	 * @access	public
 	 * @param	String name
 	 */
 
-	public static function setDefaultConnection($name) {
-		self::$defaultConnection = trim($name);
+	public static function groupDefaultSet($name) {
+		self::$groupDefault = trim($name);
 	}
 
 	/**
-	 * getDefaultConnection
+	 * groupDefaultGet
 	 * 
 	 * @access	public
 	 * @return	String default connection group
 	 */
 
-	public static function getDefaultConnection() {
-		return empty(self::$defaultConnection) ? 'default' : (self::$defaultConnection);
+	public static function groupDefaultGet() {
+		return empty(self::$groupDefault) ? 'default' : (self::$groupDefault);
 	}
 
 	/**
@@ -78,9 +78,10 @@ class Connector {
 	 * 
 	 * @access	public
 	 * @param	String group name
+	 * @param	String|Array config
 	 */
 
-	public static function setConnection($group) {
+	public static function setConnection($group, $params = null) {
 		if ( isset(self::$connections[$group]) )
 			return false;
 
@@ -112,7 +113,7 @@ class Connector {
 
 	public static function getConnection($group = null) {
 		if ( empty($group) ) {
-			$group = self::getDefaultConnection();
+			$group = self::groupDefaultGet();
 		}
 		if ( ! isset(self::$connections[$group]) ) {
 			self::setConnection($group);
