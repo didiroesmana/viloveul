@@ -64,7 +64,7 @@ class View extends Object implements ArrayAccess {
 	 * @return	void
 	 */
 
-	public static function withGlobalVar($data, $value = null) {
+	public static function dataGlobalSet($data, $value = null) {
 		if ( is_string($data) ) {
 			return self::withGlobalVar(array($data => $value));
 		}
@@ -76,6 +76,19 @@ class View extends Object implements ArrayAccess {
 				self::$globalVars[$var] = $val;
 			}
 		}
+	}
+
+	/**
+	 * dataGlobalGet
+	 * 
+	 * @access	public
+	 * @param	String var
+	 * @param	Any default value(s)
+	 * @return	Any
+	 */
+
+	public static function dataGlobalGet($var, $defaultValue = null) {
+		return isset(self::$globalVars[$var]) ? self::$globalVars[$var] : $defaultValue;
 	}
 
 	/**
