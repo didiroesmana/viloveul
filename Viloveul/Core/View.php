@@ -66,7 +66,7 @@ class View extends Object implements ArrayAccess {
 
 	public static function dataGlobalSet($data, $value = null) {
 		if ( is_string($data) ) {
-			return self::withGlobalVar(array($data => $value));
+			return self::dataGlobalSet(array($data => $value));
 		}
 
 		foreach ( (array) $data as $var => $val ) {
