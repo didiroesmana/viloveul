@@ -21,7 +21,6 @@ class Factory {
 	 */
 
 	private function __construct() {
-		// Keep silence
 	}
 
 	/**
