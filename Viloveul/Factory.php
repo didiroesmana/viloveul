@@ -5,9 +5,9 @@
  * @package		Viloveul
  */
 
-class App {
+class Factory {
 
-	const VERSION = '1.0.4';
+	const SYSVERSION = '1.0.4';
 
 	protected static $apppath;
 
