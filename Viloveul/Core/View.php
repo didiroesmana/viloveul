@@ -216,7 +216,7 @@ class View extends Object implements ArrayAccess {
 		$__file = $__dir.'/'.implode('/', $__parts).'.php';
 
 		if ( ! is_file($__file) ) {
-			throw new Exception('Unable to locate view : ' . realpath($__file));
+			throw new Exception('Unable to locate view : ' . $__file);
 		}
 
 		ob_start();

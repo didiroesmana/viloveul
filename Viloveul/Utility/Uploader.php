@@ -379,9 +379,7 @@ class Uploader {
 			$filename = $basename.$extention;
 
 			while (file_exists($target_path.$filename)) {
-
 				$filename = $basename . '-' . (++$copy) . $extention;
-
 			}
 		}
 

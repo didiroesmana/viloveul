@@ -84,7 +84,7 @@ abstract class Controller extends Object {
 			}
 
 		} catch (ReflectionException $e) {
-			die( $e->getMessage() );
+			die($e->getMessage());
 		}
 	}
 
