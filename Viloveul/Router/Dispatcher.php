@@ -148,56 +148,54 @@ class Dispatcher {
 			}
 		}
 
-		// throw exception if 404_not_found has no route
+		// Try again with 404_not_found (if any)
+		if ( isset($this->routes['404_not_found']) ) {
+			// create handler from 404_not_found route
+			$e404 = $this->routes['404_not_found'];
 
-		if ( ! isset($this->routes['404_not_found']) )
-			throw new Exception('404 Not Found');
+			if ( is_string($e404) ) {
+				list($eClass, $eMethod, $eVars) = $this->createSection($e404);
 
-		// create handler from 404_not_found route
-
-		if ( is_string($this->routes['404_not_found']) ) {
-			list($eClass, $eMethod, $eVars) = $this->createSection($this->routes['404_not_found']);
-
-			if ( class_exists($eClass) ) {
-				$eAvailableMethods = get_class_methods($eClass);
-				if ( in_array('__invoke', $eAvailableMethods, true) ) {
-					return $this->promote(
-						function($args = array()) use($eClass){
-							try {
-								return call_user_func_array(new $eClass, $args);
-							} catch (Exception $e) {
-								die($e->getMessage());
-							}
-						},
-						array($request)
-					);
-				} elseif ( in_array($eMethod, $eAvailableMethods, true) ) {
-					return $this->promote(
-						function($args = array()) use($eClass, $eMethod){
-							try {
-								$reflection = new ReflectionMethod($eClass, $eMethod);
-								return $reflection->invokeArgs(new $eClass, $args);
-							} catch (ReflectionException $e) {
-								die($e->getMessage());
-							}
-						},
-						$eVars
-					);
+				if ( class_exists($eClass) ) {
+					$eAvailableMethods = get_class_methods($eClass);
+					if ( in_array('__invoke', $eAvailableMethods, true) ) {
+						return $this->promote(
+							function($args = array()) use($eClass){
+								try {
+									return call_user_func_array(new $eClass, $args);
+								} catch (Exception $e) {
+									die($e->getMessage());
+								}
+							},
+							array($request)
+						);
+					} elseif ( in_array($eMethod, $eAvailableMethods, true) ) {
+						return $this->promote(
+							function($args = array()) use($eClass, $eMethod){
+								try {
+									$reflection = new ReflectionMethod($eClass, $eMethod);
+									return $reflection->invokeArgs(new $eClass, $args);
+								} catch (ReflectionException $e) {
+									die($e->getMessage());
+								}
+							},
+							$eVars
+						);
+					}
 				}
+
+			} elseif ( is_object($e404) && method_exists($e404, '__invoke') ) {
+				return $this->promote(
+					function($args = array()) use($e404){
+						return call_user_func_array($e404, $args);
+					},
+					array($request)
+				);
 			}
 		}
 
-		if ( is_object($this->routes['404_not_found']) && method_exists($this->routes['404_not_found'], '__invoke') ) {
-			$e404 = $this->routes['404_not_found'];
-			return $this->promote(
-				function($args = array()) use($e404){
-					return call_user_func_array($e404, $args);
-				},
-				array($request)
-			);
-		} else {
-			throw new Exception('404 Not Found');
-		}
+		// throw exception if 404_not_found has no route
+		throw new Exception('404 Not Found');
 	}
 
 	/**
