@@ -109,12 +109,17 @@ class Configure {
 
 		if ( ! empty($followed) && '/' != $followed ) {
 			$parts = explode('?', $followed);
-			$urlsuffix = self::urlsuffix();
+			$trailing_slash = (substr($parts[0], strlen($parts[0])-1, 1) == '/');
 
-			if( $urlsuffix && ! preg_match('#'.$urlsuffix.'$#', $parts[0]) ) {
-				$dynamic_url .= rtrim($parts[0], '/') . $urlsuffix;
+			$dynamic_url .= rtrim($parts[0], '/');
+
+			if ( ! $trailing_slash ) {
+				$urlsuffix = self::urlsuffix();
+				if ( $urlsuffix && ! preg_match('#'.$urlsuffix.'$#', $parts[0]) ) {
+					$dynamic_url .= $urlsuffix;
+				}
 			} else {
-				$dynamic_url .= $parts[0];
+				$dynamic_url .= '/';
 			}
 
 			if ( isset($parts[1]) && ! empty($parts[1]) ) {

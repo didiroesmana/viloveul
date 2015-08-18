@@ -79,6 +79,11 @@ class Factory {
 		} elseif ( false === strpos($name, '/') ) {
 			$location = self::$apppath.'/Packages';
 
+			/**
+			 * search file deeper
+			 * /var/www/public_html/your_app/Packages/name/name/.../name/name.php
+			 */
+
 			do {
 
 				$location .= '/'.$name;

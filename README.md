@@ -5,9 +5,9 @@ mini php mvc with url-routing
 
 ```php
 
-require_once 'viloveul/Viloveul/App.php';
+require_once 'viloveul/Viloveul/Factory.php';
 
-$app = Viloveul\App::serve($applicationDirectory);
+$app = Viloveul\Factory::serve($applicationDirectory);
 
 $app->handle('/', function() {
     return "Hello World";
