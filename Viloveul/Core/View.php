@@ -230,7 +230,7 @@ class View extends Object implements ArrayAccess {
 	protected function filterLoadedContents($contents = '') {
 		if ( strpos($contents, '{{% ') && strpos($contents, ' %}}') ) {
 			$contents = preg_replace_callback(
-				'#\{\{\% (.+) \%\}\}#',
+				'#\{\{\% (.+) \%\}\}#U',
 				array($this, 'handleContentFilter'),
 				$contents
 			);
