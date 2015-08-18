@@ -17,13 +17,33 @@ class Session implements ArrayAccess {
 	 */
 
 	public function __construct($sessionName) {
-		$this->sessionName = $sessionName;
+		$defaultOptions = array(
+			'name' => null,
+			'lifetime' => 0,
+			'path' => '/',
+			'domain' => null,
+			'secure' => true,
+			'httponly' => false
+		);
 
-		session_name($this->sessionName);
+		if ( is_string($sessionName) ) {
+			$this->options = array_merge($defaultOptions, array('name' => $sessionName));
+		} else {
+			$this->options = array_merge($defaultOptions, (array) $sessionName);
+		}
+
+		if ( empty($this->options['name']) ) {
+			$this->options['name'] = 'zafex';
+		}
+
+		$this->sessionName = $sessionName;
 
 		register_shutdown_function('session_write_close');
 
-		session_start();
+		if ( session_status() !== PHP_SESSION_ACTIVE ) {
+			session_name($this->sessionName);
+			session_start();
+		}
 
 		if ( ! isset($_SESSION['__vars']) ) {
 			$_SESSION['__vars'] = array();
@@ -160,9 +180,21 @@ class Session implements ArrayAccess {
 	 */
 
 	public function destroy() {
+		if (ini_get("session.use_cookies")) {
+			$params = session_get_cookie_params();
+			setcookie(
+				session_name(),
+				'',
+				time() - 42000,
+				$params["path"],
+				$params["domain"],
+				$params["secure"],
+				$params["httponly"]
+			);
+		}
+		$_SESSION = array();
 		session_unset();
 		session_destroy();
-		session_write_close();
 	}
 
 	/**

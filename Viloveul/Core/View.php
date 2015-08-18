@@ -17,6 +17,8 @@ class View extends Object implements ArrayAccess {
 
 	protected $directory = null;
 
+	protected $partitionDirectory;
+
 	protected static $globalVars = array();
 
 	/**
@@ -114,14 +116,33 @@ class View extends Object implements ArrayAccess {
 	 * @return	String rendered output
 	 */
 
-	public function render($callbackFilter = null) {
-		$allvars = array_merge(self::$globalVars, $this->vars);
+	public function render($__callbackFilter = null) {
+		if ( is_null($this->directory) ) {
+			$this->directory = Configure::apppath() . '/Views';
+		}
 
-		$output = $this->load($this->filename, $allvars);
+		$__definitionVars = array_merge(self::$globalVars, $this->vars);
+		$__fileparts = array_filter(explode('/', $this->filename), 'trim');
+		$__filename = $this->directory . '/'.implode('/', $__fileparts).'.php';
 
-		return is_callable($callbackFilter) ?
-			call_user_func($callbackFilter, $output, $this) :
-				$output;
+		if ( ! is_file($__filename) ) {
+			throw new Exception('Unable to locate view : ' . $__filename);
+		}
+
+		$this->partitionDirectory = dirname(realpath($__filename));
+
+		$__contentFile = $this->loadContentFile($__filename);
+
+		extract($__definitionVars);
+		ob_start();
+
+		eval('?>' . $__contentFile);
+
+		$__outputRendering = ob_get_clean();
+
+		return is_callable($__callbackFilter) ?
+			call_user_func($__callbackFilter, $__outputRendering, $this) :
+				$__outputRendering;
 	}
 
 	/**
@@ -199,35 +220,52 @@ class View extends Object implements ArrayAccess {
 	}
 
 	/**
-	 * load
+	 * filterLoadedContents
+	 * 
+	 * @access	protected
+	 * @param	String content file
+	 * @return	String
+	 */
+
+	protected function filterLoadedContents($contents = '') {
+		if ( strpos($contents, '{{% ') && strpos($contents, ' %}}') ) {
+			$contents = preg_replace_callback(
+				'#\{\{\% (.+) \%\}\}#',
+				array($this, 'handleContentFilter'),
+				$contents
+			);
+		}
+		return $contents;
+	}
+
+	/**
+	 * handleContentFilter
+	 * 
+	 * @access	protected
+	 * @param	Array matches
+	 * @return	String
+	 */
+
+	protected function handleContentFilter($matches) {
+		$filename = "{$this->partitionDirectory}/{$matches[1]}.php";
+
+		return is_file($filename) ?
+			$this->loadContentFile($filename) :
+				$matches[0];
+	}
+
+	/**
+	 * loadContentFile
 	 * 
 	 * @access	protected
 	 * @param	String filename
-	 * @param	Array merge variable
-	 * @return	void
+	 * @return	String
 	 */
 
-	protected function load($__name, $__vars = array()) {
-		$__dir = is_null($this->directory) ?
-			(Configure::apppath().'/Views') :
-				$this->directory;
-
-		$__parts = array_filter(explode('/', $__name), 'trim');
-		$__file = $__dir.'/'.implode('/', $__parts).'.php';
-
-		if ( ! is_file($__file) ) {
-			throw new Exception('Unable to locate view : ' . $__file);
-		}
-
-		ob_start();
-			extract($__vars);
-
-			include $__file;
-
-			$__html = ob_get_contents();
-		ob_end_clean();
-
-		return $__html;
+	protected function loadContentFile($filename) {
+		return $this->filterLoadedContents(
+			file_get_contents($filename)
+		);
 	}
 
 }
