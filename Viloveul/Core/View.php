@@ -116,34 +116,34 @@ class View extends Object implements ArrayAccess {
 	 * @return	String rendered output
 	 */
 
-	public function render($__281291callbackFilter = null) {
+	public function render($__local281291callbackFilter = null) {
 		if ( is_null($this->directory) ) {
 			$this->directory = Configure::apppath() . '/Views';
 		}
 
-		$__281291definitionVars = array_merge(self::$globalVars, $this->vars);
-		$__281291fileparts = array_filter(explode('/', $this->filename), 'trim');
-		$__281291filename = $this->directory . '/'.implode('/', $__281291fileparts).'.php';
+		$__local281291definitionVars = array_merge(self::$globalVars, $this->vars);
+		$__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
+		$__local281291filename = $this->directory . '/'.implode('/', $__local281291fileparts).'.php';
 
-		if ( ! is_file($__281291filename) ) {
-			throw new Exception('Unable to locate view : ' . $__281291filename);
+		if ( ! is_file($__local281291filename) ) {
+			throw new Exception('Unable to locate view : ' . $__local281291filename);
 		}
 
-		$this->partitionDirectory = dirname(realpath($__281291filename));
+		$this->partitionDirectory = dirname(realpath($__local281291filename));
 
-		$__281291contentFile = $this->loadContentFile($__281291filename);
+		$__local281291contentFile = $this->loadContentFile($__local281291filename);
 
-		extract($__281291definitionVars);
+		extract($__local281291definitionVars);
 
 		ob_start();
 
-		eval('?>' . $__281291contentFile);
+		eval('?>' . $__local281291contentFile);
 
-		$__281291outputRendering = ob_get_clean();
+		$__local281291outputRendering = ob_get_clean();
 
-		return is_callable($__281291callbackFilter) ?
-			call_user_func($__281291callbackFilter, $__281291outputRendering, $this) :
-				$__281291outputRendering;
+		return is_callable($__local281291callbackFilter) ?
+			call_user_func($__local281291callbackFilter, $__local281291outputRendering, $this) :
+				$__local281291outputRendering;
 	}
 
 	/**
