@@ -89,6 +89,8 @@ class Debugger {
 		$data .= sprintf('<p>Line Number : %s</p>', $line);
 
 		self::printMessage($data, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 0), (boolean) $reallyError);
+
+		return true;
 	}
 
 	/**
@@ -108,6 +110,8 @@ class Debugger {
 		$data .= sprintf('<p>Line Number : %s</p>', $e->getLine());
 
 		self::printMessage($data, $e->getTrace(), true);
+
+		return true;
 	}
 
 	/**
