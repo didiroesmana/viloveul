@@ -41,6 +41,21 @@ class Factory {
 
 		spl_autoload_register(array(__CLASS__, 'autoload'), true, true);
 
+		Core\Debugger::registerErrorHandler();
+		Core\Debugger::registerExceptionHandler();
+
+		register_shutdown_function(function(){
+			$error = error_get_last();
+			if (isset($error) && ($error['type'] & (E_ERROR|E_PARSE|E_CORE_ERROR|E_CORE_WARNING|E_COMPILE_ERROR|E_COMPILE_WARNING))) {
+				Core\Debugger::handleError(
+					$error['type'],
+					$error['message'],
+					$error['file'],
+					$error['line']
+				);
+			}
+		});
+
 		Core\Configure::withBaseSettings(
 			array(
 				'apppath' => self::$apppath,

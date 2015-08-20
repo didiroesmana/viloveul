@@ -201,7 +201,6 @@ class Application implements ArrayAccess {
 		}
 
 		return $this;
-		
 	}
 
 	/**
