@@ -224,7 +224,7 @@ class Application implements ArrayAccess {
 			$this->response->send($output);
 
 		} catch (ReflectionException $e) {
-			die($e->getMessage());
+			Debugger::handleException($e);
 		}
 	}
 

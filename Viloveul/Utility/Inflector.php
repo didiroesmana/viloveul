@@ -7,7 +7,6 @@
  */
 
 use Viloveul\Core\Object;
-use ReflectionClass;
 
 /**
  * Example to use :

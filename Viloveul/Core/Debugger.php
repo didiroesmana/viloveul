@@ -88,7 +88,7 @@ class Debugger {
 		$data .= sprintf('<p>Filename : %s</p>', $file);
 		$data .= sprintf('<p>Line Number : %s</p>', $line);
 
-		self::printMessage($data, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 0), (boolean) $reallyError);
+		self::printMessage($data, debug_backtrace(), (boolean) $reallyError);
 
 		return true;
 	}

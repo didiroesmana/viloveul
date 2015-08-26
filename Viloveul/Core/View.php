@@ -121,7 +121,7 @@ class View extends Object implements ArrayAccess {
 			$this->directory = Configure::apppath() . '/Views';
 		}
 
-		$__local281291definitionVars = array_merge(self::$globalVars, $this->vars);
+		$__local281291vars = array_merge(self::$globalVars, $this->vars);
 		$__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
 		$__local281291filename = $this->directory . '/'.implode('/', $__local281291fileparts).'.php';
 
@@ -133,7 +133,7 @@ class View extends Object implements ArrayAccess {
 
 		$__local281291contentFile = $this->loadContentFile($__local281291filename);
 
-		extract($__local281291definitionVars);
+		extract($__local281291vars);
 
 		ob_start();
 
@@ -229,9 +229,9 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	protected function filterLoadedContents($contents = '') {
-		if ( strpos($contents, '{{% ') && strpos($contents, ' %}}') ) {
+		if ( strpos($contents, '{{@import:') && strpos($contents, '}}') ) {
 			$contents = preg_replace_callback(
-				'#\{\{\% (.+) \%\}\}#U',
+				'#\{\{\@import\:(.+)\}\}#U',
 				array($this, 'handleContentFilter'),
 				$contents
 			);
@@ -248,10 +248,10 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	protected function handleContentFilter($matches) {
-		$filename = "{$this->partitionDirectory}/{$matches[1]}.php";
-
-		return is_file($filename) ?
-			$this->loadContentFile($filename) :
+		$filename = trim($matches[1]);
+		$path = "{$this->partitionDirectory}/{$filename}.php";
+		return is_file($path) ?
+			$this->loadContentFile($path) :
 				$matches[0];
 	}
 

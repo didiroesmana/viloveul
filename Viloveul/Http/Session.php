@@ -40,7 +40,7 @@ class Session implements ArrayAccess {
 
 		register_shutdown_function('session_write_close');
 
-		if ( session_status() !== PHP_SESSION_ACTIVE ) {
+		if ( session_id() === '' ) {
 			session_name($this->sessionName);
 			session_start();
 		}

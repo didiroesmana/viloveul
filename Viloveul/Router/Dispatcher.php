@@ -8,7 +8,6 @@
 
 use Exception;
 use ReflectionMethod;
-use ReflectionException;
 
 class Dispatcher {
 
@@ -125,23 +124,15 @@ class Dispatcher {
 			if ( in_array('__invoke', $availableMethods, true) ) {
 				return $this->promote(
 					function($args = array()) use($class){
-						try {
-							return call_user_func_array(new $class, $args);
-						} catch (Exception $e) {
-							die($e->getMessage());
-						}
+						return call_user_func_array(new $class, $args);
 					},
 					array($request)
 				);
 			} elseif ( in_array($method, $availableMethods, true) ) {
 				return $this->promote(
 					function($args = array()) use($class, $method){
-						try {
-							$reflection = new ReflectionMethod($class, $method);
-							return $reflection->invokeArgs(new $class, $args);
-						} catch (ReflectionException $e) {
-							die($e->getMessage());
-						}
+						$reflection = new ReflectionMethod($class, $method);
+						return $reflection->invokeArgs(new $class, $args);
 					},
 					$vars
 				);
@@ -161,23 +152,15 @@ class Dispatcher {
 					if ( in_array('__invoke', $eAvailableMethods, true) ) {
 						return $this->promote(
 							function($args = array()) use($eClass){
-								try {
-									return call_user_func_array(new $eClass, $args);
-								} catch (Exception $e) {
-									die($e->getMessage());
-								}
+								return call_user_func_array(new $eClass, $args);
 							},
 							array($request)
 						);
 					} elseif ( in_array($eMethod, $eAvailableMethods, true) ) {
 						return $this->promote(
 							function($args = array()) use($eClass, $eMethod){
-								try {
-									$reflection = new ReflectionMethod($eClass, $eMethod);
-									return $reflection->invokeArgs(new $eClass, $args);
-								} catch (ReflectionException $e) {
-									die($e->getMessage());
-								}
+								$reflection = new ReflectionMethod($eClass, $eMethod);
+								return $reflection->invokeArgs(new $eClass, $args);
 							},
 							$eVars
 						);
