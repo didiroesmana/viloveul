@@ -52,7 +52,7 @@ class AssetManager {
 	 * @return	Boolean
 	 */
 
-	public static function registerSource($id, $source, $type = null) {
+	public static function registerSource($id, $source, $dependency = null, $type = null) {
 		if ( is_null($type) ) {
 			if ( preg_match('#\.(css|js)$#', $source, $matches) ) {
 				$type = $matches[1];
@@ -60,7 +60,8 @@ class AssetManager {
 		}
 
 		if ( in_array($type, array('css', 'js'), true) ) {
-			self::$registeredSources["{$id}-{$type}"] = $source;
+			$dependencies = empty($dependency) ? array() : (is_string($dependency) ? array($dependency) : (array) $dependency);
+			self::$registeredSources["{$id}-{$type}"] = compact('source', 'dependencies');
 			return true;
 		}
 
@@ -76,8 +77,8 @@ class AssetManager {
 	 * @return	Boolean
 	 */
 
-	public static function printStyle($id, $dependency = null) {
-		return self::printScript($id, $dependency, 'css');
+	public static function printStyle($id) {
+		return self::printScript($id, 'css');
 	}
 
 	/**
@@ -90,40 +91,30 @@ class AssetManager {
 	 * @return	Boolean
 	 */
 
-	public static function printScript($id, $dependency = null, $type = 'js') {
-		if ( is_null($dependency) ) {
-			$dependencies = array();
-		} else {
-			$dependencies = is_string($dependency) ? array($dependency) : (array) $dependency;
-		}
-
+	public static function printScript($id, $type = 'js') {
 		$key = "{$id}-{$type}";
 
 		if ( ! isset(self::$registeredSources[$key]) ) {
 			return null;
-		} elseif ( ! self::confirmLoaded($key, true) ) {
-			return false;
-			
 		}
 
-		if ( ! empty($dependencies) ) {
+		extract(self::$registeredSources[$key]);
+
+		if ( isset($dependencies) && ! empty($dependencies) ) {
 			foreach ( $dependencies as $dependency_id ) {
-				self::printScript($dependency_id, null, $type);
+				self::printScript($dependency_id, $type);
 			}
 		}
+
+		self::load($type, $id, $source);
+
+		return true;
 
 		$format = ($type == 'css') ?
 			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
 				'<script type="text/javascript" id="%s" src="%s"></script>';
 
-		printf(
-			"{$format}\n",
-			$key,
-			sprintf(
-				self::$registeredSources[$key],
-				rtrim(Configure::baseurl(), '/')
-			)
-		);
+		printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
 
 		return true;
 	}

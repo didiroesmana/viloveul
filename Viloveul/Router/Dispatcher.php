@@ -178,7 +178,7 @@ class Dispatcher {
 		}
 
 		// throw exception if 404_not_found has no route
-		throw new Exception('404 Not Found');
+		throw new Exception('No Handler for request "' . $request . '"');
 	}
 
 	/**
@@ -194,10 +194,12 @@ class Dispatcher {
 		$path = $this->controllerDirectory;
 		$ns = $this->nsClass;
 
+		$name = null;
+
 		if ( ! empty($sections) ) {
 			do {
 
-				$name = implode('', array_map('ucfirst', explode('-', $sections[0])));
+				$name = str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[0]))));
 				$path .= "/{$name}";
 
 				if ( is_dir($path) && ! is_file("{$path}.php") ) {
@@ -209,13 +211,16 @@ class Dispatcher {
 		}
 
 		if ( empty($sections) ) {
-			$sections = array('main', 'index');
+			$sections = is_file("{$path}/{$name}.php") ?
+				array($name, 'index') :
+					array('main', 'index');
+
 		} elseif ( ! isset($sections[1]) ) {
 			$sections[1] = 'index';
 		}
 
-		$class = $ns . implode('', array_map('ucfirst', explode('-', strtolower($sections[0]))));
-		$method = 'action' . implode('', array_map('ucfirst', explode('-', strtolower($sections[1]))));
+		$class = $ns . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[0]))));
+		$method = 'action' . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[1]))));
 		$vars = (count($sections) > 1) ? array_slice($sections, 2) : array();
 
 		return array($class, $method, $vars);

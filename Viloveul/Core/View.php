@@ -141,9 +141,11 @@ class View extends Object implements ArrayAccess {
 
 		$__local281291outputRendering = ob_get_clean();
 
+		$__local281291trimOutputRendering = trim($__local281291outputRendering);
+
 		return is_callable($__local281291callbackFilter) ?
-			call_user_func($__local281291callbackFilter, $__local281291outputRendering, $this) :
-				$__local281291outputRendering;
+			call_user_func($__local281291callbackFilter, $__local281291trimOutputRendering, $this) :
+				$__local281291trimOutputRendering;
 	}
 
 	/**
@@ -229,9 +231,9 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	protected function filterLoadedContents($contents = '') {
-		if ( strpos($contents, '{{@import:') && strpos($contents, '}}') ) {
+		if ( strpos($contents, '{{@') !== false && false !== strpos($contents, '}}') ) {
 			$contents = preg_replace_callback(
-				'#\{\{\@import\:(.+)\}\}#U',
+				'#\{\{\@(.+)\}\}#U',
 				array($this, 'handleContentFilter'),
 				$contents
 			);
@@ -249,7 +251,7 @@ class View extends Object implements ArrayAccess {
 
 	protected function handleContentFilter($matches) {
 		$filename = trim($matches[1]);
-		$path = "{$this->partitionDirectory}/{$filename}.php";
+		$path = "{$this->directory}/{$filename}.php";
 		return is_file($path) ?
 			$this->loadContentFile($path) :
 				$matches[0];
