@@ -16,7 +16,27 @@ use Viloveul\Router;
 
 class Application implements ArrayAccess {
 
+	/**
+	 * current Application instance
+	 */
+
 	private static $instance;
+
+	/**
+	 * mapping before filter callbacks
+	 */
+
+	protected $beforeActions = array();
+
+	/**
+	 * mapping after filter callbacks
+	 */
+
+	protected $afterActions = array();
+
+	/**
+	 * mapping Collections
+	 */
 
 	protected $offsetCollections = array();
 
@@ -204,8 +224,62 @@ class Application implements ArrayAccess {
 	}
 
 	/**
+	 * filterAction
+	 * 
+	 * @access	public
+	 * @param	Callable|Boolean
+	 * @param	[mixed] Callable
+	 * @return	void
+	 */
+
+	public function filterAction($filter) {
+		$params = func_get_args();
+		$handler = array_pop($params);
+		if ( $this->isInvokable($handler) ) {
+			if ( isset($params[0]) && $params[0] === true ) {
+				$this->afterActions[] = $handler;
+			} else {
+				$this->beforeActions[] = $handler;
+			}
+		}
+		return $this;
+	}
+
+	/**
+	 * applyFilter
+	 * 
+	 * @access	public
+	 * @param	Array
+	 * @return	String
+	 */
+
+	public function applyFilter($filters) {
+		$data = '';
+
+		if ( count($filters) > 0 ) {
+			$data = array_reduce($filters, function($carry, $item){
+				ob_start();
+					$filter = call_user_func($item);
+					$output = ob_get_contents();
+				ob_end_clean();
+				if ( ! is_null($filter) ) {
+					$carry .= $filter;
+				} elseif ( ! is_null($output) ) {
+					$carry .= $output;
+				}
+				return $carry;
+			});
+		}
+		
+		return $data;
+	}
+
+	/**
 	 * run
 	 * execute or running the application
+	 * 
+	 * @access	public
+	 * @return	void
 	 */
 
 	public function run() {
@@ -220,8 +294,14 @@ class Application implements ArrayAccess {
 		try {
 
 			$reflection = new ReflectionFunction($handler);
+
+			$before = $this->applyFilter($this->beforeActions);
+
 			$output = $reflection->invoke($this->dispatcher->fetchVars());
-			$this->response->send($output);
+
+			$after = $this->applyFilter($this->afterActions);
+
+			$this->response->send($before.$output.$after);
 
 		} catch (ReflectionException $e) {
 			Debugger::handleException($e);

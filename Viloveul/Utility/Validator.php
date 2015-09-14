@@ -193,7 +193,7 @@ class Validator {
 						}
 					}
 				}
-				$methodName = 'is' . implode('', array_map('ucfirst', explode('_', $callback)));
+				$methodName = 'is' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($callback))));
 				if ( method_exists($this, $methodName) ) {
 					$function = array($this, $methodName);
 				}
