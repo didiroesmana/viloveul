@@ -12,6 +12,8 @@ class Session implements ArrayAccess {
 
 	protected $sessionName = 'zafex';
 
+	protected $flashVars = array();
+
 	/**
 	 * Constructor
 	 */
@@ -52,6 +54,11 @@ class Session implements ArrayAccess {
 			unset($_SESSION['__vars']);
 			$_SESSION['__vars'] = array();
 		}
+
+		if ( isset($_SESSION['__flashdata']) ) {
+			$this->flashVars = (array) $_SESSION['__flashdata'];
+			unset($_SESSION['__flashdata']);
+		}
 	}
 
 	/**
@@ -77,7 +84,7 @@ class Session implements ArrayAccess {
 
 	public function offsetSet($name, $value) {
 		if ( ! is_null($name) ) {
-			$this->pushData(array($name => $value));
+			$this->set(array($name => $value));
 		}
 	}
 
@@ -91,7 +98,7 @@ class Session implements ArrayAccess {
 	 */
 
 	public function offsetGet($name) {
-		return $this->read($name, null);
+		return $this->get($name, null);
 	}
 
 	/**
@@ -128,7 +135,13 @@ class Session implements ArrayAccess {
 	 */
 
 	public function set($data, $value = null) {
-		$this->pushData($data, $value);
+		if ( is_string($data) ) {
+			return $this->set(array($data => $value));
+		}
+
+		foreach ( (array) $data as $key => $val ) {
+			$_SESSION['__vars'][$key] = $val;
+		}
 
 		return $this;
 	}
@@ -198,21 +211,53 @@ class Session implements ArrayAccess {
 	}
 
 	/**
-	 * pushData
+	 * createFlashdata
 	 * 
-	 * @access	protected
-	 * @param	Array|String data
-	 * @param	[mixed]
+	 * @access	public
+	 * @param	String key
+	 * @param	any
+	 * @return	void
 	 */
 
-	protected function pushData($data, $val = null) {
-		if ( ! is_array($data) ) {
-			$this->pushData(array($data => $val));
-		} else {
-			foreach ( (array) $data as $name => $value ) {
-				$_SESSION['__vars'][$name] = $value;
-			}
+	public function createFlashdata($data, $value = null) {
+		if ( is_string($data) ) {
+			return $this->createFlashdata(array($data => $value));
 		}
+
+		foreach ( (array) $data as $key => $val ) {
+			$_SESSION['__flashdata'][$key] = $val;
+		}
+		return $this;
+	}
+
+	/**
+	 * readFlashdata
+	 * 
+	 * @access	public
+	 * @param	String key
+	 * @param	any
+	 * @return	any
+	 */
+
+	public function readFlashdata($key, $default = null) {
+		return isset($this->flashVars[$key]) ?
+			$this->flashVars[$key] :
+				$default;
+	}
+
+	/**
+	 * keepFlashdata
+	 * 
+	 * @access	public
+	 * @param	String key
+	 * @return	boid
+	 */
+
+	public function keepFlashdata($key) {
+		if ( isset($this->flashVars[$key]) ) {
+			$_SESSION['__flashdata'][$key] = $this->flashVars[$key];
+		}
+		return $this;
 	}
 
 }
