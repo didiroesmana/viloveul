@@ -7,6 +7,7 @@
  */
 
 use Viloveul\Core\Configure;
+use Viloveul\Core\View;
 
 class Response {
 
@@ -38,8 +39,10 @@ class Response {
 		$this->contentType = 'text/html';
 		$this->headers = array();
 
-		if ( 0 !== ob_get_level() ) {
-			ob_clean();
+		if ( $lvl = ob_get_level() ) {
+			for ( $i = $lvl; $i > 0; $i-- ) {
+				ob_clean();
+			}
 		}
 
 		return $this;
@@ -93,7 +96,7 @@ class Response {
 	 */
 
 	public function setOutput($data, $apppend = false) {
-		$output = (string) $data;
+		$output = ($data instanceof View) ? $data->render() : ((string) $data);
 
 		$this->output = (true === $apppend) ?
 			($this->output.$output) :

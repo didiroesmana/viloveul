@@ -14,16 +14,6 @@ abstract class Controller extends Object {
 	private static $loadedControllers = array();
 
 	/**
-	 * Constructor
-	 * 
-	 * @access	public
-	 */
-
-	public function __construct() {
-		
-	}
-
-	/**
 	 * To String
 	 * 
 	 * @access	public
@@ -56,29 +46,25 @@ abstract class Controller extends Object {
 	 * @return	String output
 	 */
 
-	public static function fire($requestSegment, $return = false) {
+	public static function fire($requestSegment, $print = true) {
 		$request = preg_split('/\//', $requestSegment, -1, PREG_SPLIT_NO_EMPTY);
-		$method = 'action' . implode('', array_map('ucfirst', explode('-', array_shift($request))));
+		$method = 'action' . str_replace(' ', '', ucwords(str_replace('-', ' ', $request)));
 
 		if ( ! self::hasMethod($method) )
 			return false;
 
-		$class = self::classname();
-
-		if ( ! isset(self::$loadedControllers[$class]) ) {
-			self::$loadedControllers[$class] = new $class;
-		}
-
 		try {
 
-			$ref = new ReflectionMethod($class, $method);
-			$output = $ref->invokeArgs(self::$loadedControllers[$class], $request);
+			$ref = new ReflectionMethod(self::classname(), $method);
+			$output = $ref->invokeArgs(self::createInstance(), $request);
 
 			if ( ! is_null($output) ) {
-				if ( true === $return )
-					return $output;
 
-				echo $output;
+				if ( true !== $print ) {
+					return $output;
+				}
+
+				print $output;
 
 				return true;
 			}

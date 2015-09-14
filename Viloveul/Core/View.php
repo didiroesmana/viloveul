@@ -11,15 +11,13 @@ use ArrayAccess;
 
 class View extends Object implements ArrayAccess {
 
+	private static $globalVars = array();
+
 	protected $filename = false;
 
 	protected $vars = array();
 
 	protected $directory = null;
-
-	protected $partitionDirectory;
-
-	protected static $globalVars = array();
 
 	/**
 	 * Constructor
@@ -54,7 +52,8 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	public static function make($name, array $vars = array()) {
-		return self::createInstance($name, $vars)->render();
+		self::dataGlobalSet($vars, null);
+		return self::createInstance($name)->render();
 	}
 
 	/**
@@ -128,8 +127,6 @@ class View extends Object implements ArrayAccess {
 		if ( ! is_file($__local281291filename) ) {
 			throw new Exception('Unable to locate view : ' . $__local281291filename);
 		}
-
-		$this->partitionDirectory = dirname(realpath($__local281291filename));
 
 		$__local281291contentFile = $this->loadContentFile($__local281291filename);
 
@@ -234,7 +231,7 @@ class View extends Object implements ArrayAccess {
 		if ( strpos($contents, '{{@') !== false && false !== strpos($contents, '}}') ) {
 			$contents = preg_replace_callback(
 				'#\{\{\@(.+)\}\}#U',
-				array($this, 'handleContentFilter'),
+				array($this, 'handleContentFiltered'),
 				$contents
 			);
 		}
@@ -242,16 +239,17 @@ class View extends Object implements ArrayAccess {
 	}
 
 	/**
-	 * handleContentFilter
+	 * handleContentFiltered
 	 * 
 	 * @access	protected
 	 * @param	Array matches
 	 * @return	String
 	 */
 
-	protected function handleContentFilter($matches) {
+	protected function handleContentFiltered($matches) {
 		$filename = trim($matches[1]);
 		$path = "{$this->directory}/{$filename}.php";
+
 		return is_file($path) ?
 			$this->loadContentFile($path) :
 				$matches[0];
