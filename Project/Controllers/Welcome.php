@@ -6,7 +6,7 @@ class Welcome extends Controller {
 
 	/**
 	 * actionIndex
-	 * visit : yourdomain.tld/index.php/welcome/index or yourdomain.tld/index.php/hello
+	 * visit : yourdomain.tld/index.php/welcome/index or yourdomain.tld/index.php/welcome
 	 * action -> (Index) is default handler for controller class
 	 * 
 	 * @access	public
