@@ -5,7 +5,7 @@ mini php mvc with url-routing
 
 ```php
 
-require_once 'viloveul/Viloveul/Factory.php';
+require_once 'path-to-viloveul/Viloveul/Factory.php';
 
 $app = Viloveul\Factory::serve($applicationDirectory);
 
