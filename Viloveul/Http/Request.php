@@ -129,8 +129,7 @@ class Request {
 			self::parseCommandLine() :
 				self::parseRequestUri();
 
-		if ( defined('INDEX_PAGE') && '' != INDEX_PAGE ) {
-			$index_page = trim(INDEX_PAGE);
+		if ( $index_page = Configure::read('index_page', 'trim') ) {
 			if ( ! empty($index_page) && 0 === strpos($request, "/{$index_page}") ) {
 				$request = substr($request, strlen($index_page) + 1);
 			}

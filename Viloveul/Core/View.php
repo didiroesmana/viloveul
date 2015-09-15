@@ -117,7 +117,7 @@ class View extends Object implements ArrayAccess {
 
 	public function render($__local281291callbackFilter = null) {
 		if ( is_null($this->directory) ) {
-			$this->directory = Configure::apppath() . '/Views';
+			$this->directory = APPPATH . '/Views';
 		}
 
 		$__local281291vars = array_merge(self::$globalVars, $this->vars);

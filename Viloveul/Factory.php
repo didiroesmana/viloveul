@@ -9,10 +9,6 @@ class Factory {
 
 	const SYSVERSION = '1.0.4';
 
-	protected static $apppath;
-
-	protected static $basedir;
-
 	/**
 	 * Constructor
 	 * Keep silence
@@ -36,33 +32,23 @@ class Factory {
 		$apppath = realpath($path) or die('Application path does not exists');
 		$basedir = realpath(dirname($_SERVER['SCRIPT_FILENAME']));
 
-		self::$apppath = rtrim(str_replace('\\', '/', $apppath), '/');
-		self::$basedir = rtrim(str_replace('\\', '/', $basedir), '/');
+		define('APPPATH', rtrim(str_replace('\\', '/', $apppath), '/'));
+		define('BASEDIR', rtrim(str_replace('\\', '/', $basedir), '/'));
 
 		spl_autoload_register(array(__CLASS__, 'autoload'), true, true);
+
+		is_file(APPPATH.'/configs.php') and Core\Configure::write(include APPPATH.'/configs.php');
 
 		Core\Debugger::registerErrorHandler();
 		Core\Debugger::registerExceptionHandler();
 
 		register_shutdown_function(function(){
 			$error = error_get_last();
+
 			if (isset($error) && ($error['type'] & (E_ERROR|E_PARSE|E_CORE_ERROR|E_CORE_WARNING|E_COMPILE_ERROR|E_COMPILE_WARNING))) {
-				Core\Debugger::handleError(
-					$error['type'],
-					$error['message'],
-					$error['file'],
-					$error['line']
-				);
+				Core\Debugger::handleError($error['type'], $error['message'], $error['file'], $error['line']);
 			}
 		});
-
-		Core\Configure::withBaseSettings(
-			array(
-				'apppath' => self::$apppath,
-				'basedir' => self::$basedir,
-				'urlsuffix' => (defined('URL_SUFFIX') ? URL_SUFFIX : '')
-			)
-		);
 
 		$app = new Core\Application();
 
@@ -88,11 +74,11 @@ class Factory {
 
 		} elseif ( 0 === strpos($name, 'App/') ) {
 
-			$location = self::$apppath.'/'.substr($name, 4).$php;
+			$location = APPPATH.'/'.substr($name, 4).$php;
 			is_file($location) && require_once($location);
 
 		} elseif ( false === strpos($name, '/') ) {
-			$location = self::$apppath.'/Packages';
+			$location = APPPATH.'/Packages';
 
 			/**
 			 * search file deeper

@@ -55,7 +55,7 @@ class Uploader {
 	public function __construct($field = 'files', $destination = null) {
 		$this->field = $field;
 		if ( is_null($destination) ) {
-			$destination = Configure::basedir() . '/uploads';
+			$destination = BASEDIR . '/uploads';
 		}
 		$this->setDestination($destination);
 	}

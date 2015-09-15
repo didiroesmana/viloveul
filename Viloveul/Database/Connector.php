@@ -91,7 +91,7 @@ class Connector {
 			self::$connections[$group] = new $class;
 		} else {
 
-			$config = Configure::get('database', function($value) use ($group){
+			$config = Configure::read('db', function($value) use ($group){
 				return isset($value[$group]) ? $value[$group] : array();
 			});
 

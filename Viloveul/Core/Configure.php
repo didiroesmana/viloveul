@@ -10,50 +10,6 @@ class Configure {
 
 	protected static $configs = array();
 
-	private static $baseSettings = array();
-
-	/**
-	 * Call Statically
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	Array arguments
-	 * @return	Any
-	 */
-
-	public static function __callStatic($calledName, $params) {
-		if ( ! array_key_exists($calledName, self::$baseSettings) ) {
-			return isset($params[0]) ? $params[0] : null;
-		}
-
-		if ( isset($params[0]) && is_callable($params[0]) ) {
-			$handler = array_shift($params);
-			array_unshift($params, self::$baseSettings[$calledName]);
-			return call_user_func_array($handler, $params);
-		}
-
-		return self::$baseSettings[$calledName];
-	}
-
-	/**
-	 * withBaseSettings
-	 * 
-	 * @access	public
-	 * @param	Array private settings
-	 */
-
-	public static function withBaseSettings($data, $value = null) {
-		if ( ! is_array($data) ) {
-			return self::withBaseSettings(array($data => $value));
-		}
-
-		foreach ( $data as $key => $val ) {
-			if ( ! isset(self::$baseSettings[$key]) ) {
-				self::$baseSettings[$key] = $val;
-			}
-		}
-	}
-
 	/**
 	 * baseurl
 	 * 
@@ -66,8 +22,8 @@ class Configure {
 		static $baseurl = null;
 
 		if ( is_null($baseurl) ) {
-			if ( defined('BASEURL') && ('' != BASEURL || '/' != BASEURL) ) {
-				$baseurl = rtrim(BASEURL, '/') . '/';
+			if ( $config_baseurl = self::read('baseurl', 'trim') ) {
+				$baseurl = rtrim($config_baseurl, '/') . '/';
 			} else {
 				$host = self::server('http_host');
 				if ( $host != 'localhost' ) {
@@ -101,7 +57,7 @@ class Configure {
 		static $siteurl = null;
 
 		if ( is_null($siteurl) ) {
-			$index_page = defined('INDEX_PAGE') ? trim(INDEX_PAGE, '/') : 'index.php';
+			$index_page = self::read('index_page', 'trim');
 			$siteurl = rtrim(self::baseurl("/{$index_page}"), '/');
 		}
 
@@ -114,7 +70,7 @@ class Configure {
 			$dynamic_url .= rtrim($parts[0], '/');
 
 			if ( ! $trailing_slash ) {
-				$urlsuffix = self::urlsuffix();
+				$urlsuffix = self::read('url_suffix', 'trim');
 				if ( $urlsuffix && ! preg_match('#'.$urlsuffix.'$#', $parts[0]) ) {
 					$dynamic_url .= $urlsuffix;
 				}
@@ -164,13 +120,14 @@ class Configure {
 	public static function server($name, $filter = null) {
 		$name = in_array($name, array('argv', 'argc'), true) ? $name : strtoupper($name);
 		$value = isset($_SERVER[$name]) ? $_SERVER[$name] : null;
+
 		return is_callable($filter) ?
 			call_user_func($filter, $value) :
 				$value;
 	}
 
 	/**
-	 * get
+	 * read
 	 * 
 	 * @access	public
 	 * @param	String name
@@ -178,51 +135,34 @@ class Configure {
 	 * @return	Any
 	 */
 
-	public static function get($name, $filter = null) {
-		if ( ! isset(self::$configs[$name]) ) {
-			self::$configs[$name] = array_key_exists($name, self::$baseSettings) ?
-				self::$baseSettings[$name] :
-					self::load($name);
-		}
+	public static function read($name, $filter = null) {
+		$value = array_key_exists($name, self::$configs) ?
+			self::$configs[$name] :
+				null;
 
 		return is_callable($filter) ?
-			call_user_func($filter, self::$configs[$name]) :
-				self::$configs[$name];
+			call_user_func($filter, $value) :
+				$value;
 	}
 
 	/**
-	 * set
+	 * write
 	 * 
 	 * @access	public
 	 * @param	String name
 	 * @param	Any value
 	 */
 
-	public static function set($name, $value, $overwrite = false) {
-		if ( ! array_key_exists($name, self::$configs) || true === $overwrite ) {
-			self::$configs[$name] = $value;
-		}
-	}
-
-	/**
-	 * load
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	Any default value
-	 * @return	Any value
-	 */
-
-	public static function load($name, $default = null) {
-		$config_file = realpath(self::apppath() . "/{$name}.config.php");
-
-		if ( is_file($config_file) ) {
-			$value = include $config_file;
-		} else {
-			$value = $default;
+	public static function write($data, $value = null) {
+		if ( is_string($data) ) {
+			return self::write(array($data => $value));
 		}
 
-		return $value;
+		foreach ( (array) $data as $key => $val ) {
+			if ( ! array_key_exists($key, self::$configs) ) {
+				self::$configs[$key] = $val;
+			}
+		}
 	}
 
 	/**

@@ -50,18 +50,6 @@ class Application implements ArrayAccess {
 
 		self::$instance =& $this;
 
-		$this['settings'] = $this->share(function($c){
-			$defaultSettings = array(
-				'session_name' => 'viloveul'
-			);
-
-			return Configure::get('settings', function($config) use ($defaultSettings){
-				$settings = is_array($config) ? $config : array();
-
-				return array_merge($defaultSettings, $settings);
-			});
-		});
-
 		$this['input'] = $this->share(function($c){
 			return new Http\Input();
 		});
@@ -75,11 +63,14 @@ class Application implements ArrayAccess {
 		});
 
 		$this['session'] = $this->share(function($c){
-			return new Http\Session($c['settings']['session_name']);
+			$session_name = Configure::read('session_name', function($value){
+				return empty($value) ? 'zafex' : $value;
+			});
+			return new Http\Session($session_name);
 		});
 
 		$this['dispatcher'] = $this->share(function($c){
-			return new Router\Dispatcher($c['routes'], Configure::apppath() . '/Controllers');
+			return new Router\Dispatcher($c['routes'], APPPATH . '/Controllers');
 		});
 
 		$this['routes'] = $this->share(function($c){
@@ -283,7 +274,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function run() {
-		$this->dispatcher->dispatch(Http\Request::createFromGlobals(), Configure::urlsuffix());
+		$this->dispatcher->dispatch(Http\Request::createFromGlobals(), Configure::read('url_suffix'));
 
 		$handler = $this->dispatcher->fetchHandler();
 
