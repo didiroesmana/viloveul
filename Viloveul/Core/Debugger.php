@@ -53,9 +53,7 @@ class Debugger {
 		foreach ($backtrace as $error) :
 			if ( isset($error['file']) ) {
 				$output .= '<p style="padding-left: 10px; border-left: 2px dashed #CCCCCC">';
-				$output .= sprintf('File : %s<br />', $error['file']);
-				$output .= sprintf('Line : %s<br />', $error['line']);
-				$output .= sprintf('Function : %s', $error['function']);
+				$output .= sprintf('%s -> %s : %d', $error['function'], $error['file'], $error['line']);
 				$output .= '</p>';
 			}
 		endforeach;
