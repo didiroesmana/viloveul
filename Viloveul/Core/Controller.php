@@ -14,6 +14,17 @@ abstract class Controller extends Object {
 	private static $loadedControllers = array();
 
 	/**
+	 * Constructor
+	 * 
+	 * @access	public
+	 * @return	void
+	 */
+
+	public function __construct() {
+		self::$loadedControllers[self::classname()] = $this;
+	}
+
+	/**
 	 * To String
 	 * 
 	 * @access	public
@@ -53,10 +64,16 @@ abstract class Controller extends Object {
 		if ( ! self::hasMethod($method) )
 			return false;
 
+		$classname = self::classname();
+
 		try {
 
-			$ref = new ReflectionMethod(self::classname(), $method);
-			$output = $ref->invokeArgs(self::createInstance(), $request);
+			$controller = isset(self::$loadedControllers[$classname]) ?
+				self::$loadedControllers[$classname] :
+					self::createInstance();
+
+			$ref = new ReflectionMethod($classname, $method);
+			$output = $ref->invokeArgs($controller, $request);
 
 			if ( ! is_null($output) ) {
 

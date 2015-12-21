@@ -2,7 +2,9 @@
 
 require __DIR__.'/Viloveul/Factory.php';
 
-$app = Viloveul\Factory::serve(__DIR__.'/Project');
+Viloveul\Factory::registerSystemAutoloader();
+
+$app = Viloveul\Factory::serve('Project');
 
 $app->handle('/', function() use($app){
 	return 'Default Handler';

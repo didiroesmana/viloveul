@@ -47,6 +47,6 @@ interface IConnection {
 	 * @param	Array
 	 */
 
-	public function command($statement, array $params);
+	public function command($statement, $params);
 
 }

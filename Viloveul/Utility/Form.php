@@ -212,7 +212,7 @@ class Form extends Object {
 		$id = $class = $this->generateId();
 		$type = 'radio';
 		$defaults = compact('name', 'value', 'id', 'class', 'type');
-		if ( Request::isPost() ) {
+		if ( 'post' == Request::method('strtolower') ) {
 			$checked = ( $value == $this->catchValue($name) );
 		}
 
@@ -240,7 +240,7 @@ class Form extends Object {
 		$id = $class = $this->generateId();
 		$type = 'checkbox';
 		$defaults = compact('name', 'value', 'id', 'class', 'type');
-		if ( Request::isPost() ) {
+		if ( 'post' == Request::method('strtolower') ) {
 			$checked = ( $value === $this->catchValue($name) );
 		}
 
@@ -388,11 +388,11 @@ class Form extends Object {
 	 */
 
 	public function catchValue($field, $default = null) {
-		if ( false === Request::isPost() || null === Request::input('post', $field, $default) ) {
+		if ( 'post' == Request::method('strtolower') || ! isset($_POST[$field]) ) {
 			return $default;
 		}
 
-		return Request::input('post', $field, $default);
+		return $_POST[$field];
 	}
 
 	/**

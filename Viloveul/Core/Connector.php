@@ -1,4 +1,4 @@
-<?php namespace Viloveul\Database;
+<?php namespace Viloveul\Core;
 
 /**
  * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
@@ -6,7 +6,7 @@
  * @subpackage	Database
  */
 
-use Viloveul\Core\Configure;
+use Viloveul\Database;
 
 class Connector {
 
@@ -22,7 +22,7 @@ class Connector {
 	 * @return	Array configured
 	 */
 
-	protected static function parseConfig($params) {
+	protected static function parseConfiguration($params) {
 		if ( is_string($params) ) {
 			return array('dsn' => $params, 'username' => null, 'password' => null, 'prefix' => '');
 		}
@@ -52,25 +52,37 @@ class Connector {
 	}
 
 	/**
-	 * groupDefaultSet
+	 * defaultGroupSet
 	 * 
 	 * @access	public
 	 * @param	String name
 	 */
 
-	public static function groupDefaultSet($name) {
+	public static function defaultGroupSet($name) {
 		self::$groupDefault = trim($name);
 	}
 
 	/**
-	 * groupDefaultGet
+	 * defaultGroupGet
 	 * 
 	 * @access	public
 	 * @return	String default connection group
 	 */
 
-	public static function groupDefaultGet() {
+	public static function defaultGroupGet() {
 		return empty(self::$groupDefault) ? 'default' : (self::$groupDefault);
+	}
+
+	/**
+	 * hasConnection
+	 * 
+	 * @access	public
+	 * @param	String
+	 * @return	Boolean
+	 */
+
+	public static function hasConnection($group) {
+		return array_key_exists($group, self::$connections);
 	}
 
 	/**
@@ -82,7 +94,7 @@ class Connector {
 	 */
 
 	public static function setConnection($group, $params = null) {
-		if ( isset(self::$connections[$group]) )
+		if ( self::hasConnection($group) )
 			return false;
 
 		$class = '\\App\\Drivers\\DB\\' . implode('', array_map('ucfirst', explode('-', $group)));
@@ -95,11 +107,11 @@ class Connector {
 				return isset($value[$group]) ? $value[$group] : array();
 			});
 
-			$dbconf = self::parseConfig($config);
+			$dbconf = self::parseConfiguration($config);
 
 			extract($dbconf);
 
-			self::$connections[$group] = new Scenario($dsn, $username, $password, $prefix);
+			self::$connections[$group] = new Database\Scenario($dsn, $username, $password, $prefix);
 		}
 	}
 
@@ -111,12 +123,12 @@ class Connector {
 	 * @return	Object connection (Scenario)
 	 */
 
-	public static function getConnection($group = null) {
+	public static function getConnection($group = null, $params = null) {
 		if ( empty($group) ) {
-			$group = self::groupDefaultGet();
+			$group = self::defaultGroupGet();
 		}
-		if ( ! isset(self::$connections[$group]) ) {
-			self::setConnection($group);
+		if ( ! self::hasConnection($group) ) {
+			self::setConnection($group, $params);
 		}
 		return self::$connections[$group];
 	}

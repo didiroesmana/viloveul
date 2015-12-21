@@ -12,7 +12,7 @@ class Session implements ArrayAccess {
 
 	protected $sessionName = 'zafex';
 
-	protected $flashVars = array();
+	protected $flashvars = array();
 
 	/**
 	 * Constructor
@@ -56,7 +56,7 @@ class Session implements ArrayAccess {
 		}
 
 		if ( isset($_SESSION['__flashdata']) ) {
-			$this->flashVars = (array) $_SESSION['__flashdata'];
+			$this->flashvars = (array) $_SESSION['__flashdata'];
 			unset($_SESSION['__flashdata']);
 		}
 	}
@@ -183,7 +183,7 @@ class Session implements ArrayAccess {
 	 */
 
 	public function has($name) {
-		return isset($_SESSION['__vars'][$name]);
+		return array_key_exists($name, $_SESSION['__vars']);
 	}
 
 	/**
@@ -240,8 +240,8 @@ class Session implements ArrayAccess {
 	 */
 
 	public function readFlashdata($key, $default = null) {
-		return isset($this->flashVars[$key]) ?
-			$this->flashVars[$key] :
+		return array_key_exists($key, $this->flashvars) ?
+			$this->flashvars[$key] :
 				$default;
 	}
 
@@ -254,8 +254,8 @@ class Session implements ArrayAccess {
 	 */
 
 	public function keepFlashdata($key) {
-		if ( isset($this->flashVars[$key]) ) {
-			$_SESSION['__flashdata'][$key] = $this->flashVars[$key];
+		if ( array_key_exists($key, $this->flashvars) ) {
+			$_SESSION['__flashdata'][$key] = $this->flashvars[$key];
 		}
 		return $this;
 	}

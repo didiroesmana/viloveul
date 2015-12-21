@@ -7,11 +7,10 @@
  */
 
 use Exception;
-use ArrayAccess;
 
-class View extends Object implements ArrayAccess {
+class View extends Object {
 
-	private static $globalVars = array();
+	private static $data = array();
 
 	protected $filename = false;
 
@@ -51,13 +50,13 @@ class View extends Object implements ArrayAccess {
 	 * @return	String rendered output
 	 */
 
-	public static function make($name, array $vars = array()) {
-		self::dataGlobalSet($vars, null);
+	public static function make($name, array $data = array()) {
+		self::globalDataSet($data, null);
 		return self::createInstance($name)->render();
 	}
 
 	/**
-	 * withGlobalVar
+	 * globalDataSet
 	 * 
 	 * @access	public
 	 * @param	String|Array var(s) name
@@ -65,22 +64,22 @@ class View extends Object implements ArrayAccess {
 	 * @return	void
 	 */
 
-	public static function dataGlobalSet($data, $value = null) {
+	public static function globalDataSet($data, $value = null) {
 		if ( is_string($data) ) {
-			return self::dataGlobalSet(array($data => $value));
+			return self::globalDataSet(array($data => $value));
 		}
 
 		foreach ( (array) $data as $var => $val ) {
-			if ( is_null($val) && isset(self::$globalVars[$var]) ) {
-				unset(self::$globalVars[$var]);
+			if (is_null($val) && array_key_exists($var, self::$data)) {
+				unset(self::$data[$var]);
 			} else {
-				self::$globalVars[$var] = $val;
+				self::$data[$var] = $val;
 			}
 		}
 	}
 
 	/**
-	 * dataGlobalGet
+	 * globalDataGet
 	 * 
 	 * @access	public
 	 * @param	String var
@@ -88,8 +87,8 @@ class View extends Object implements ArrayAccess {
 	 * @return	Any
 	 */
 
-	public static function dataGlobalGet($var, $defaultValue = null) {
-		return isset(self::$globalVars[$var]) ? self::$globalVars[$var] : $defaultValue;
+	public static function globalDataGet($name, $defaultValue = null) {
+		return array_key_exists($name, self::$data) ? self::$data[$name] : $defaultValue;
 	}
 
 	/**
@@ -117,10 +116,10 @@ class View extends Object implements ArrayAccess {
 
 	public function render($__local281291callbackFilter = null) {
 		if ( is_null($this->directory) ) {
-			$this->directory = APPPATH . '/Views';
+			$this->directory = Application::realpath() . '/Views';
 		}
 
-		$__local281291vars = array_merge(self::$globalVars, $this->vars);
+		$__local281291vars = array_merge(self::$data, $this->vars);
 		$__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
 		$__local281291filename = $this->directory . '/'.implode('/', $__local281291fileparts).'.php';
 
@@ -155,10 +154,10 @@ class View extends Object implements ArrayAccess {
 	 */
 
 	public function get($var, $defaultValue = null) {
-		if ( isset($this->vars[$var]) ) {
+		if (array_key_exists($name, $this->vars)) {
 			return $this->vars[$var];
-		} elseif ( isset(self::$globalVars[$var]) ) {
-			return self::$globalVars[$var];
+		} elseif (array_key_exists($name, self::$data) {
+			return self::$data[$var];
 		}
 
 		return $defaultValue;
@@ -182,41 +181,6 @@ class View extends Object implements ArrayAccess {
 		}
 
 		return $this;
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetSet($var, $value) {
-		if ( ! is_null($var) ) {
-			$this->set($var, $value);
-		}
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetGet($var) {
-		return $this->get($var);
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetUnset($var) {
-		if ( isset($this->vars[$var]) )
-			unset($this->vars[$var]);
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetExists($var) {
-		return isset($this->vars[$var]);
 	}
 
 	/**

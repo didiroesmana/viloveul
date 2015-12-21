@@ -8,6 +8,7 @@
 
 use PDO;
 use PDOException;
+use Exception;
 
 class Scenario extends PDO implements IConnection {
 
@@ -21,15 +22,13 @@ class Scenario extends PDO implements IConnection {
 
 	public function __construct($dsn, $user, $pass, $prefix = '') {
 		try {
+			$this->prefix = $prefix;
+
 			parent::__construct($dsn, $user, $pass);
 			parent::setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
-			parent::setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_TO_STRING);
-
-		} catch ( PDOException $e ) {
-			die(sprintf('Connection Failed : %s', $e->getMessage()));
+		} catch (PDOException $e) {
+			throw new Exception(sprintf('Connection Failed : %s', $e->getMessage()));
 		}
-
-		$this->prefix = $prefix;
 	}
 
 	/**
@@ -122,10 +121,15 @@ class Scenario extends PDO implements IConnection {
 	 * @return	Object query
 	 */
 
-	public function command($statement, array $params = array()) {
-		$query = $this->prepare($statement) or die($statement);
-		$query->execute($params);
-		return $query;
+	public function command($statement, $params = array()) {
+		try {
+			$query = $this->prepare($statement);
+			$query->execute($params);
+
+			return $query;
+		} catch (PDOException $e) {
+			throw new Exception($e->getMessage());
+		}
 	}
 
 }

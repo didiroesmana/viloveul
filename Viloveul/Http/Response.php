@@ -41,7 +41,7 @@ class Response {
 
 		if ( $lvl = ob_get_level() ) {
 			for ( $i = $lvl; $i > 0; $i-- ) {
-				ob_clean();
+				ob_flush();
 			}
 		}
 
@@ -57,7 +57,7 @@ class Response {
 	 * @return	void
 	 */
 
-	public function header($header, $overwrite = true) {
+	public function httpHeader($header, $overwrite = true) {
 		$this->headers[] = array($header, $overwrite);
 		return $this;
 	}

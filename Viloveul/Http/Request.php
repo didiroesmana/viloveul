@@ -10,50 +10,32 @@ use Viloveul\Core\Configure;
 
 class Request {
 
+	protected static $globalRequest = null;
+
 	/**
-	 * input
+	 * createFromGlobals
 	 * 
 	 * @access	public
-	 * @param	String type
-	 * @param	String name
-	 * @param	Any default value
-	 * @return	Any value
+	 * @return	String
 	 */
 
-	public static function input($type, $name, $default = null) {
-		$type = strtoupper($type);
-		if ( $type === 'GET' ) {
-			return isset($_GET[$name]) ? $_GET[$name] : $default;
-		} elseif ( $type === 'POST' ) {
-			return isset($_POST[$name]) ? $_POST[$name] : $default;
-		} elseif ( $type === 'FILE' ) {
-			return isset($_FILES[$name]) ? $_FILES[$name] : $default;
-		}
-		return $default;
+	public static function createFromGlobals() {
+		is_null(self::$globalRequest) and self::resolveGlobalRequest();
+
+		return self::$globalRequest;
 	}
 
 	/**
-	 * isPost
-	 * Check if request method is POST
+	 * resolveGlobalRequest
 	 * 
 	 * @access	public
-	 * @return	Boolean
+	 * @return	void
 	 */
 
-	public static function isPost() {
-		return self::isMethod('post');
-	}
-
-	/**
-	 * isGet
-	 * Check if request method is GET
-	 * 
-	 * @access	public
-	 * @return	Boolean
-	 */
-
-	public static function isGet() {
-		return self::isMethod('get');
+	public static function resolveGlobalRequest() {
+		self::$globalRequest = self::isCli() ?
+			self::parseCommandLine() :
+				self::parseRequestUri();
 	}
 
 	/**
@@ -65,7 +47,9 @@ class Request {
 	 */
 
 	public static function isCli() {
-		return self::isMethod('cli');
+		if (! defined('PHP_SAPI'))
+			return false;
+		return PHP_SAPI == 'cli';
 	}
 
 	/**
@@ -77,11 +61,11 @@ class Request {
 	 */
 
 	public static function isAjax() {
-		return self::isMethod('ajax');
+		return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
 	}
 
 	/**
-	 * isMethod
+	 * method
 	 * Compare param with current request
 	 * 
 	 * @access	public
@@ -89,17 +73,12 @@ class Request {
 	 * @return	Boolean
 	 */
 
-	public static function isMethod($method) {
-		$method = strtolower($method);
-
-		if ( $method == 'cli' ) {
-			return defined('PHP_SAPI') && PHP_SAPI == 'cli';
-
-		} elseif ( $method == 'ajax' || 'xhr' == $method ) {
-			return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
+	public static function method($option) {
+		if (in_array($option, array('put', 'patch', 'delete', 'options'))) {
+			return (isset($_POST['_METHOD']) && strtolower($_POST['_METHOD']) == $option);
 		}
 
-		return Configure::server('request_method', 'strtolower') == $method;
+		return Configure::server('request_method', 'strtolower') == $option;
 	}
 
 	/**
@@ -111,41 +90,35 @@ class Request {
 	 */
 
 	public static function httpReferer($default = '') {
-		$getReferer = self::input('get', 'referer', $default);
-		return Configure::server('http_referer', function($value) use($getReferer) {
-			return empty($value) ? $getReferer : $value;
+		return Configure::server('http_referer', function($value) use($default){
+			return is_null($value) ? $default : $value;
 		});
 	}
 
 	/**
-	 * createFromGlobals
+	 * currenturl
 	 * 
 	 * @access	public
-	 * @return	createFromGlobal
+	 * @return	Boolean
 	 */
 
-	public static function createFromGlobals() {
-		$request = self::isCli() ?
-			self::parseCommandLine() :
-				self::parseRequestUri();
+	public static function currenturl() {
+		$uriString = self::parseRequestUri();
+		$query = Configure::server('query_string');
 
-		if ( $index_page = Configure::read('index_page', 'trim') ) {
-			if ( ! empty($index_page) && 0 === strpos($request, "/{$index_page}") ) {
-				$request = substr($request, strlen($index_page) + 1);
-			}
-		}
-
-		return $request;
+		return empty($query) ?
+			Configure::siteurl($uriString) :
+				Configure::siteurl("/{$uriString}?{$query}");
 	}
 
 	/**
 	 * parseRequestUri
 	 * 
-	 * @access	public
+	 * @access	protected
 	 * @return	String request
 	 */
 
-	public static function parseRequestUri() {
+	protected static function parseRequestUri() {
 		static $request = null;
 
 		if ( is_null($request) ) {
@@ -185,11 +158,11 @@ class Request {
 	/**
 	 * parseCommandLine
 	 * 
-	 * @access	public
-	 * @return String request
+	 * @access	protected
+	 * @return	String request
 	 */
 
-	public static function parseCommandLine() {
+	protected static function parseCommandLine() {
 		static $request = null;
 
 		if ( is_null($request) ) {
@@ -210,22 +183,6 @@ class Request {
 		}
 
 		return $request;
-	}
-
-	/**
-	 * currenturl
-	 * 
-	 * @access	public
-	 * @return	String currentUrl
-	 */
-
-	public static function currenturl() {
-		$path = self::createFromGlobals();
-		$qs = Configure::server('query_string');
-
-		return empty($qs) ?
-			Configure::siteurl($path) :
-				Configure::siteurl("{$path}?{$qs}");
 	}
 
 }

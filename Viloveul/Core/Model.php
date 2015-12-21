@@ -6,7 +6,6 @@
  * @subpackage	Core
  */
 
-use Viloveul\Database\Connector;
 use Viloveul\Database\IConnection;
 
 abstract class Model extends Object {

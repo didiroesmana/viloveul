@@ -20,6 +20,37 @@ class Factory {
 	}
 
 	/**
+	 * registerSystemAutoloader
+	 * 
+	 * @access	public
+	 * @return	void
+	 */
+
+	public static function registerSystemAutoloader() {
+		spl_autoload_register(array(__CLASS__, 'systemAutoloader'), true, true);
+	}
+
+	/**
+	 * systemAutoloader
+	 * loader for called class
+	 * 
+	 * @access	public
+	 * @param	String Classname
+	 * @return	void
+	 */
+
+	public static function systemAutoloader($class) {
+		$php = '.php';
+		$class = ltrim($class, '\\');
+		$name = str_replace('\\', '/', $class);
+
+		if ( 0 === strpos($name, 'Viloveul/') ) {
+			$location = dirname(__DIR__).'/'.$name.$php;
+			is_file($location) && require_once($location);
+		}
+	}
+
+	/**
 	 * serve
 	 * initialize front controller
 	 * 
@@ -29,15 +60,19 @@ class Factory {
 	 */
 
 	public static function serve($path) {
-		$apppath = realpath($path) or die('Application path does not exists');
-		$basedir = realpath(dirname($_SERVER['SCRIPT_FILENAME']));
+		$realpath = realpath($path);
 
-		define('APPPATH', rtrim(str_replace('\\', '/', $apppath), '/'));
-		define('BASEDIR', rtrim(str_replace('\\', '/', $basedir), '/'));
+		if ( false === $realpath ) {
+			die('Application path does not appear.');
+		}
 
-		spl_autoload_register(array(__CLASS__, 'autoload'), true, true);
+		$realpath = rtrim(str_replace('\\', '/', $realpath), '/');
+		$basepath = rtrim(str_replace('\\', '/', realpath(($_SERVER['SCRIPT_FILENAME']))), '/');
 
-		is_file(APPPATH.'/configs.php') and Core\Configure::write(include APPPATH.'/configs.php');
+		if (is_file($realpath.'/configs.php')) {
+			$configs = include $realpath . '/configs.php';
+			is_array($configs) and Core\Configure::write($configs);
+		}
 
 		Core\Debugger::registerErrorHandler();
 		Core\Debugger::registerExceptionHandler();
@@ -50,51 +85,6 @@ class Factory {
 			}
 		});
 
-		$app = new Core\Application();
-
-		return $app;
-	}
-
-	/**
-	 * autoload
-	 * loader for called class
-	 * 
-	 * @access	public
-	 * @param	String Classname
-	 */
-
-	public static function autoload($class) {
-		$php = '.php';
-		$class = ltrim($class, '\\');
-		$name = str_replace('\\', '/', $class);
-
-		if ( 0 === strpos($name, 'Viloveul/') ) {
-			$location = dirname(__DIR__).'/'.$name.$php;
-			is_file($location) && require_once($location);
-
-		} elseif ( 0 === strpos($name, 'App/') ) {
-
-			$location = APPPATH.'/'.substr($name, 4).$php;
-			is_file($location) && require_once($location);
-
-		} elseif ( false === strpos($name, '/') ) {
-			$location = APPPATH.'/Packages';
-
-			/**
-			 * search file deeper
-			 * /var/www/public_html/your_app/Packages/name/name/.../name/name.php
-			 */
-
-			do {
-
-				$location .= '/'.$name;
-
-				if ( is_file($location.$php) ) {
-					require_once($location.$php);
-					break;
-				}
-
-			} while ( is_dir($location) );
-		}
+		return new Core\Application($realpath, $basepath);
 	}
 }

@@ -61,8 +61,7 @@ class Validator {
 	 */
 
 	protected function isMatches($value, $field) {
-		$check = Request::input('post', $field);
-		if ( null === $check || $value != $check ) {
+		if ( ! isset($_POST[$field]) || $_POST[$field] != $check ) {
 			$this->setMessage($this->currentField, '%s Field is not matches.');
 			return false;
 		}
@@ -170,7 +169,7 @@ class Validator {
 	 */
 
 	protected function checkRules($field, $label, $callbacks) {
-		if ( null === Request::input('post', $field) )
+		if ( ! isset($_POST[$field]) )
 			return false;
 
 		$value =& $_POST[$field];

@@ -6,92 +6,48 @@
  * @subpackage	Router
  */
 
-use ArrayAccess;
 use Iterator;
 
-class RouteCollection implements ArrayAccess, Iterator {
+class RouteCollection implements Iterator {
 
 	protected $collections = array();
 
 	/**
-	 * Constructor
-	 * 
+	 * add
+	 *
 	 * @access	public
-	 * @param	Array routes
-	 * @return	void
+	 * @param	String
+	 * @param	String|Object
 	 */
 
-	public function __construct($routes = array()) {
-		empty($routes) or $this->add($routes);
+	public function add($pattern, $handler) {
+		$this->collections[$pattern] = $handler;
 	}
 
 	/**
-	 * add
-	 * 
+	 * has
+	 *
 	 * @access	public
-	 * @param	String|Array
-	 * @param	String|Callable handler
-	 * @return	void
+	 * @param	String
+	 * @return	Boolean
 	 */
 
-	public function add($data, $value = null) {
-		if ( is_string($data) ) {
-			return $this->add(array($data => $value));
-		}
-
-		foreach ( (array) $data as $key => $target ) {
-			if ( ! is_null($key) ) {
-				$this->collections[$key] = $target;
-			}
-		}
-
-		return $this;
+	public function has($pattern) {
+		return isset($pattern, $this->collections);
 	}
 
 	/**
 	 * fetch
-	 * 
+	 *
 	 * @access	public
-	 * @param	String name
-	 * @return	String|Callable handler
+	 * @param	String
+	 * @return	String|Object|NULL
 	 */
 
-	public function fetch($key) {
-		return isset($this->collections[$key]) ? $this->collections[$key] : null;
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetSet($key, $val) {
-		$this->add(array($key => $val));
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetGet($key) {
-		return $this->fetch($key);
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetUnset($key) {
-		if ( isset($this->collections[$key]) ) {
-			unset($this->collections[$key]);
-		}
-	}
-
-	/**
-	 * Implements of ArrayAccess
-	 */
-
-	public function offsetExists($key) {
-		return isset($this->collections[$key]);
+	public function fetch($pattern) {
+		return $this->has($pattern) ?
+			$this->collections[$pattern] :
+				null;
 	}
 
 	/**

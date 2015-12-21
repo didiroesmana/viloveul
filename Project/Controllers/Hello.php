@@ -15,7 +15,7 @@ class Hello extends Controller {
 	 */
 
 	public function __invoke() {
-		return "Hello World";
+		return "Hello World " . http_build_query(func_get_args());
 	}
 
 	public function actionOne() {

@@ -9,8 +9,7 @@
 use Exception;
 use finfo as FileInfo;
 use Viloveul\Core\Events as EventManager;
-use Viloveul\Core\Configure;
-use Viloveul\Http\Request;
+use Viloveul\Core\Application;
 
 /**
  * Example to use :
@@ -55,7 +54,7 @@ class Uploader {
 	public function __construct($field = 'files', $destination = null) {
 		$this->field = $field;
 		if ( is_null($destination) ) {
-			$destination = BASEDIR . '/uploads';
+			$destination = Application::basepath() . '/uploads';
 		}
 		$this->setDestination($destination);
 	}
@@ -99,7 +98,7 @@ class Uploader {
 			return false;
 		}
 
-		$files = Request::input('file', $this->field, array());
+		$files = isset($_FILES[$this->field]) ? $_FILES[$this->field] : array();
 
 		$filelist = array();
 
@@ -123,10 +122,6 @@ class Uploader {
 				$filelist['size'][$i],
 				$filelist['error'][$i]
 			);
-		}
-
-		if ( $this->hasError() ) {
-			EventManager::addListener('upload_error', array($this, 'displayErrors'));
 		}
 
 		return (count($this->dataUploaded) > 0);

@@ -165,15 +165,4 @@ class Configure {
 		}
 	}
 
-	/**
-	 * &reff
-	 * 
-	 * @access	public
-	 * @return	All configured values
-	 */
-
-	public static function &reff() {
-		return self::$configs;
-	}
-
 }

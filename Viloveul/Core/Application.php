@@ -22,6 +22,10 @@ class Application implements ArrayAccess {
 
 	private static $instance;
 
+	private $realpath = null;
+
+	private $basepath = null;
+
 	/**
 	 * mapping before filter callbacks
 	 */
@@ -38,15 +42,15 @@ class Application implements ArrayAccess {
 	 * mapping Collections
 	 */
 
-	protected $offsetCollections = array();
+	protected $dataOffset = array();
 
 	/**
 	 * Constructor
 	 * initialize dependencies
 	 */
 
-	public function __construct() {
-		is_null(self::$instance) or die('application has been loaded');
+	public function __construct($realpath, $basepath) {
+		is_null(self::$instance) or die('application has been initialized');
 
 		self::$instance =& $this;
 
@@ -59,7 +63,7 @@ class Application implements ArrayAccess {
 		});
 
 		$this['uri'] = $this->share(function($c){
-			return new Http\Uri(Http\Request::createFromGlobals());
+			return new Http\Uri();
 		});
 
 		$this['session'] = $this->share(function($c){
@@ -69,13 +73,19 @@ class Application implements ArrayAccess {
 			return new Http\Session($session_name);
 		});
 
-		$this['dispatcher'] = $this->share(function($c){
-			return new Router\Dispatcher($c['routes'], APPPATH . '/Controllers');
+		$this['dispatcher'] = $this->share(function($c) use($realpath){
+			return new Router\Dispatcher($c['routeCollection'], "{$realpath}/Controllers");
 		});
 
-		$this['routes'] = $this->share(function($c){
+		$this['routeCollection'] = $this->share(function($c){
 			return new Router\RouteCollection();
 		});
+
+		$this->realpath = $realpath;
+
+		$this->basepath = $basepath;
+
+		spl_autoload_register(array($this, 'autoloadClass'));
 	}
 
 	/**
@@ -115,7 +125,7 @@ class Application implements ArrayAccess {
 
 	public function offsetSet($name, $value) {
 		if ( ! is_null($name)) {
-			$this->offsetCollections[$name] = $value;
+			$this->dataOffset[$name] = $value;
 		}
 	}
 
@@ -133,9 +143,9 @@ class Application implements ArrayAccess {
 			return null;
 		}
 
-		return $this->isInvokable($this->offsetCollections[$name]) ?
-			call_user_func($this->offsetCollections[$name], $this) :
-				$this->offsetCollections[$name];
+		return $this->isInvokable($this->dataOffset[$name]) ?
+			call_user_func($this->dataOffset[$name], $this) :
+				$this->dataOffset[$name];
 	}
 
 	/**
@@ -148,7 +158,7 @@ class Application implements ArrayAccess {
 
 	public function offsetUnset($name) {
 		if ( $this->offsetExists($name) ) {
-			unset($this->offsetCollections[$name]);
+			unset($this->dataOffset[$name]);
 		}
 	}
 
@@ -162,7 +172,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function offsetExists($name) {
-		return isset($this->offsetCollections[$name]);
+		return isset($this->dataOffset[$name]);
 	}
 
 	/**
@@ -190,25 +200,23 @@ class Application implements ArrayAccess {
 
 		if ( count($params) > 1 ) {
 			$methods = array_shift($params);
-
-			foreach ( (array) $methods as $method ) :
-				if ( Http\Request::isMethod($method) ) {
-					foreach ( (array) $params[0] as $routing ) {
-						$this->routes[$routing] = $callback;
+			foreach ($methods as $method) {
+				if (Http\Request::method($method)) {
+					foreach ((array) $params[0] as $key) {
+						if ($this->routeCollection->has($key)) {
+							continue;
+						}
+						$this->routeCollection->add($key, $callback);
 					}
 				}
-			endforeach;
-
+			}
 		} else {
-
-			foreach ( (array) $route as $routing ) :
-				if ( isset($this->routes[$routing]) ) {
+			foreach ((array) $route as $key) :
+				if ($this->routeCollection->has($key)) {
 					continue;
 				}
-
-				$this->routes[$routing] = $callback;
+				$this->routeCollection->add($key, $callback);
 			endforeach;
-
 		}
 
 		return $this;
@@ -285,13 +293,9 @@ class Application implements ArrayAccess {
 		try {
 
 			$reflection = new ReflectionFunction($handler);
-
 			$before = $this->applyFilter($this->beforeActions);
-
 			$output = $reflection->invoke($this->dispatcher->fetchVars());
-
 			$after = $this->applyFilter($this->afterActions);
-
 			$this->response->send($before.$output.$after);
 
 		} catch (ReflectionException $e) {
@@ -313,6 +317,58 @@ class Application implements ArrayAccess {
 	}
 
 	/**
+	 * autoloadClass
+	 * 
+	 * @access	public
+	 * @param	String
+	 * @return	void
+	 */
+
+	public function autoloadClass($class) {
+		$class = ltrim($class, '\\');
+		$name = str_replace('\\', '/', $class);
+		$has = false;
+
+		if ( 0 === strpos($name, 'App/') ) {
+
+			$location = $this->realpath().'/'.substr($name, 4);
+			$this->loadFileClass($location);
+
+		} elseif ( false === strpos($name, '/') ) {
+			$location = $this->realpath().'/Libraries';
+
+			/**
+			 * search file deeper
+			 * /var/www/public_html/your_app/Libraries/Name/Name/.../Name/Name.php
+			 */
+
+			do {
+				$location .= '/'.$name;
+
+				if ( false !== $this->loadFileClass($location) ) {
+					break;
+				}
+
+			} while ( is_dir($location) );
+		}
+	}
+
+	/**
+	 * loadFileClass
+	 * 
+	 * @access	public
+	 * @param	String
+	 * @return	Boolean false when file does not exists
+	 */
+
+	public static function loadFileClass($location) {
+		if ( ! is_file("{$location}.php") ) {
+			return false;
+		}
+		require_once "{$location}.php";
+	}
+
+	/**
 	 * share
 	 * 
 	 * @access	public
@@ -330,6 +386,28 @@ class Application implements ArrayAccess {
 
 			return $object;
 		};
+	}
+
+	/**
+	 * realpath
+	 * 
+	 * @access	public
+	 * @return	String
+	 */
+
+	public static function realpath() {
+		return self::$instance->realpath;
+	}
+
+	/**
+	 * basepath
+	 * 
+	 * @access	public
+	 * @return	String
+	 */
+
+	public static function basepath() {
+		return self::$instance->basepath;
 	}
 
 	/**

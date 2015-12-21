@@ -17,9 +17,11 @@ class Dispatcher {
 
 	protected $vars = array();
 
-	protected $nsClass = "App\\Controllers\\";
+	protected $ns = "App\\Controllers\\";
 
 	protected $controllerDirectory;
+
+	protected $autoload = true;
 
 	/**
 	 * Constructor
@@ -28,7 +30,7 @@ class Dispatcher {
 	 * @param	ArrayAccess instanceof \Viloveul\Core\RouteCollection
 	 */
 
-	public function __construct(RouteCollection $routes, $controllerDirectory) {
+	public function __construct(RouteCollection $routes, $controllerDirectory = '/') {
 		$this->routes = $routes;
 		$this->controllerDirectory = realpath($controllerDirectory);
 	}
@@ -119,7 +121,7 @@ class Dispatcher {
 		list($class, $method, $vars) = $this->createSection($request);
 		// Set handler if exists
 
-		if ( class_exists($class) ) {
+		if ( class_exists($class, ($this->autoload === true)) ) {
 			$availableMethods = get_class_methods($class);
 			if ( in_array('__invoke', $availableMethods, true) ) {
 				return $this->promote(
@@ -140,14 +142,14 @@ class Dispatcher {
 		}
 
 		// Try again with 404_not_found (if any)
-		if ( isset($this->routes['404_not_found']) ) {
+		if ( $this->routes->has('404_not_found') ) {
 			// create handler from 404_not_found route
-			$e404 = $this->routes['404_not_found'];
+			$e404 = $this->routes->fetch('404_not_found');
 
 			if ( is_string($e404) ) {
 				list($eClass, $eMethod, $eVars) = $this->createSection($e404);
 
-				if ( class_exists($eClass) ) {
+				if ( class_exists($eClass, ($this->autoload === true)) ) {
 					$eAvailableMethods = get_class_methods($eClass);
 					if ( in_array('__invoke', $eAvailableMethods, true) ) {
 						return $this->promote(
@@ -178,7 +180,7 @@ class Dispatcher {
 		}
 
 		// throw exception if 404_not_found has no route
-		throw new Exception('No Handler for request "' . $request . '"');
+		throw new NoHandlerException('No Handler for request "' . $request . '"');
 	}
 
 	/**
@@ -192,7 +194,7 @@ class Dispatcher {
 	protected function createSection($request) {
 		$sections = $this->segmentToArray($request);
 		$path = $this->controllerDirectory;
-		$ns = $this->nsClass;
+		$ns = $this->ns;
 
 		$name = null;
 

@@ -21,10 +21,10 @@ class Debugger {
 	 */
 
 	public static function printMessage($content, array $backtrace = array(), $exit = true) {
-		$output = '<div style="border: 1px solid #993300; padding-left: 15px; margin: 0 0 10px 0;">';
+		$output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
 		$output .= $content;
 		if ( $backtrace ) {
-			$output .= self::calcBacktrace($backtrace);
+			$output .= self::calculateBacktrace($backtrace);
 		}
 		$output .= '</div>';
 
@@ -40,14 +40,14 @@ class Debugger {
 	}
 
 	/**
-	 * calcBacktrace
+	 * calculateBacktrace
 	 * 
 	 * @access	public
 	 * @param	Array backtrace
 	 * @return	String
 	 */
 
-	public static function calcBacktrace(array $backtrace) {
+	public static function calculateBacktrace(array $backtrace) {
 		$output = '';
 
 		foreach ($backtrace as $error) :
