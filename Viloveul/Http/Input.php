@@ -61,7 +61,7 @@ class Input {
 	 */
 
 	public function stream($name, $default = null) {
-		if ( null === $this->streams ) {
+		if (null === $this->streams) {
 			parse_str(file_get_contents('php://input'), $this->streams);
 			is_array($this->streams) or ($this->streams = array());
 		}
@@ -78,10 +78,10 @@ class Input {
 	 */
 
 	public function header($name, $default = null) {
-		if ( null === $this->headers ) {
-			if ( function_exists('apache_request_headers') ) {
+		if (null === $this->headers) {
+			if (function_exists('apache_request_headers')) {
 				$this->headers = apache_request_headers();
-			} elseif ( function_exists('getallheaders') ) {
+			} elseif (function_exists('getallheaders')) {
 				$this->headers = getallheaders();
 			} else {
 				$this->headers = array();

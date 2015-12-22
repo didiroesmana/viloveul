@@ -20,7 +20,7 @@ class Events {
 	 */
 
 	protected static function buildListenerId($name, $listener) {
-		if ( is_string($listener) ) {
+		if (is_string($listener)) {
 			return $listener;
 		}
 
@@ -28,9 +28,9 @@ class Events {
 			array($listener, '') :
 				(array) $listener;
 
-		if ( is_object($callback[0]) ) {
+		if (is_object($callback[0])) {
 			return spl_object_hash($callback[0]) . $callback[1];
-		} elseif ( is_string($callback[0]) ) {
+		} elseif (is_string($callback[0])) {
 			return $callback[0] . '::' . $callback[1];
 		}
 	}
@@ -59,7 +59,7 @@ class Events {
 	 */
 
 	public static function trigger($name, array $value = array()) {
-		if ( ! isset(self::$listeners[$name]) ) {
+		if (! isset(self::$listeners[$name])) {
 			return $value;
 		}
 
@@ -67,17 +67,18 @@ class Events {
 
 		do {
 
-			foreach( (array) current(self::$listeners[$name]) as $callback )
-				if ( is_callable($callback) ) {
+			foreach((array) current(self::$listeners[$name]) as $callback) :
+				if (is_callable($callback)) {
 					$filtered = call_user_func_array($callback, $params);
-					if ( $filtered !== null ) {
-						if ( is_array($filtered) || is_object($filtered) ) {
+					if ($filtered !== null) {
+						if (is_array($filtered) || is_object($filtered)) {
 							$params = is_array($filtered) ? $filtered : get_object_vars($filtered);
 						} else {
 							$params[0] = $filtered;
 						}
 					}
 				}
+			endforeach;
 
 		} while ( false !== next(self::$listeners[$name]) );
 

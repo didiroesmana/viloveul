@@ -23,20 +23,18 @@ class Debugger {
 	public static function printMessage($content, array $backtrace = array(), $exit = true) {
 		$output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
 		$output .= $content;
-		if ( $backtrace ) {
+		if ($backtrace) {
 			$output .= self::calculateBacktrace($backtrace);
 		}
 		$output .= '</div>';
 
-		if ( ob_get_level() > 0 ) {
+		if (ob_get_level() > 0) {
 			ob_end_flush();
 		}
 
 		print $output;
 
-		if ( $exit ) {
-			exit(1);
-		}
+		empty($exit) or exit(1);
 	}
 
 	/**
@@ -51,7 +49,7 @@ class Debugger {
 		$output = '';
 
 		foreach ($backtrace as $error) :
-			if ( isset($error['file']) ) {
+			if (isset($error['file'])) {
 				$output .= '<p style="padding-left: 10px; border-left: 2px dashed #CCCCCC">';
 				$output .= sprintf('%s -> %s : %d', $error['function'], $error['file'], $error['line']);
 				$output .= '</p>';
@@ -77,7 +75,7 @@ class Debugger {
 
 		$reallyError = (((E_ERROR | E_COMPILE_ERROR | E_CORE_ERROR | E_USER_ERROR) & $severity) === $severity);
 
-		if ( ($severity & error_reporting()) !== $severity ) {
+		if (($severity & error_reporting()) !== $severity) {
 			return;
 		}
 

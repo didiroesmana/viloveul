@@ -7,6 +7,9 @@
  */
 
 use Viloveul\Database;
+use ReflectionClass;
+use ReflectionException;
+use Exception;
 
 class Connector {
 
@@ -23,7 +26,7 @@ class Connector {
 	 */
 
 	protected static function parseConfiguration($params) {
-		if ( is_string($params) ) {
+		if (is_string($params)) {
 			return array('dsn' => $params, 'username' => null, 'password' => null, 'prefix' => '');
 		}
 
@@ -47,7 +50,7 @@ class Connector {
 		$prefix = $dbconf['prefix'];
 
 		unset($dbconf['username'], $dbconf['password'], $dbconf['driver'], $dbconf['prefix']);
-		$dsn = "{$driver}:" . http_build_query($dbconf, '', ';');
+		$dsn = sprintf('%s:%s', $driver, http_build_query($dbconf, '', ';'));
 		return compact('dsn', 'username', 'password', 'prefix');
 	}
 
@@ -93,25 +96,31 @@ class Connector {
 	 * @param	String|Array config
 	 */
 
-	public static function setConnection($group, $params = null) {
-		if ( self::hasConnection($group) )
+	public static function setConnection($group, $params = array()) {
+		if (self::hasConnection($group))
 			return false;
 
 		$class = '\\App\\Drivers\\DB\\' . implode('', array_map('ucfirst', explode('-', $group)));
 
-		if ( class_exists($class) ) {
-			self::$connections[$group] = new $class;
+		if (class_exists($class)) {
+			try {
+				$check = new ReflectionClass($class);
+				if (! $check->implementsInterface('\\Viloveul\\Database\\IConnection')) {
+					throw new Exception("Database driver must implement of \\Viloveul\\Database\\IConnection");
+				}
+				self::$connections[$group] = $check->newInstance();
+			} catch(ReflectionException $e) {
+				throw new Exception($e->getMessage());
+			}
 		} else {
-
-			$config = Configure::read('db', function($value) use ($group){
-				return isset($value[$group]) ? $value[$group] : array();
+			$config = Configure::read('db', function($value) use($group, $params){
+				return isset($value[$group]) ? $value[$group] : $params;
 			});
 
 			$dbconf = self::parseConfiguration($config);
-
 			extract($dbconf);
 
-			self::$connections[$group] = new Database\Scenario($dsn, $username, $password, $prefix);
+			self::$connections[$group] = new Database\Manager($dsn, $username, $password, $prefix);
 		}
 	}
 
@@ -123,11 +132,11 @@ class Connector {
 	 * @return	Object connection (Scenario)
 	 */
 
-	public static function getConnection($group = null, $params = null) {
-		if ( empty($group) ) {
+	public static function getConnection($group = null, $params = array()) {
+		if (empty($group)) {
 			$group = self::defaultGroupGet();
 		}
-		if ( ! self::hasConnection($group) ) {
+		if (! self::hasConnection($group)) {
 			self::setConnection($group, $params);
 		}
 		return self::$connections[$group];

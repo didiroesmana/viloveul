@@ -65,11 +65,11 @@ class View extends Object {
 	 */
 
 	public static function globalDataSet($data, $value = null) {
-		if ( is_string($data) ) {
+		if (is_string($data)) {
 			return self::globalDataSet(array($data => $value));
 		}
 
-		foreach ( (array) $data as $var => $val ) {
+		foreach ((array) $data as $var => $val) {
 			if (is_null($val) && array_key_exists($var, self::$data)) {
 				unset(self::$data[$var]);
 			} else {
@@ -155,11 +155,11 @@ class View extends Object {
 	 */
 
 	public function set($var, $value = null) {
-		if ( is_string($var) ) {
+		if (is_string($var)) {
 			return $this->set(array($var => $value));
 		}
 
-		foreach ( (array) $var as $key => $val ) {
+		foreach ((array) $var as $key => $val) {
 			$this->vars[$key] = $val;
 		}
 
@@ -175,7 +175,7 @@ class View extends Object {
 	 */
 
 	protected function filterLoadedContents($contents = '') {
-		if ( strpos($contents, '{{@') !== false && false !== strpos($contents, '}}') ) {
+		if (strpos($contents, '{{@') !== false && false !== strpos($contents, '}}')) {
 			$contents = preg_replace_callback(
 				'#\{\{\@(.+)\}\}#U',
 				array($this, 'handleContentFiltered'),

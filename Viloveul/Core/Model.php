@@ -34,16 +34,16 @@ abstract class Model extends Object {
 	 */
 
 	public static function forge($param = true) {
-		$class = parent::classname();
+		$classname = __CLASS__;
 
-		if ( false === $param ) {
+		if (false === $param) {
 			return parent::createInstance();
 
 		} elseif ($param instanceof $class) {
 			self::$modelCollections[$class] = $param;
 		}
 
-		if ( ! isset(self::$modelCollections[$class]) ) {
+		if (! isset(self::$modelCollections[$class])) {
 			self::$modelCollections[$class] = parent::createInstance($param);
 		}
 

@@ -29,7 +29,7 @@ class AssetManager {
 
 		// make sure the source is only printed one at once time
 
-		if ( ! self::confirmLoaded($key, true) ) {
+		if (! self::confirmLoaded($key, true)) {
 			return null;
 		}
 
@@ -53,13 +53,13 @@ class AssetManager {
 	 */
 
 	public static function registerSource($id, $source, $dependency = null, $type = null) {
-		if ( is_null($type) ) {
-			if ( preg_match('#\.(css|js)$#', $source, $matches) ) {
+		if (is_null($type)) {
+			if (preg_match('#\.(css|js)$#', $source, $matches)) {
 				$type = $matches[1];
 			}
 		}
 
-		if ( in_array($type, array('css', 'js'), true) ) {
+		if (in_array($type, array('css', 'js'), true)) {
 			$dependencies = empty($dependency) ? array() : (is_string($dependency) ? array($dependency) : (array) $dependency);
 			self::$registeredSources["{$id}-{$type}"] = compact('source', 'dependencies');
 			return true;
@@ -94,14 +94,14 @@ class AssetManager {
 	public static function printScript($id, $type = 'js') {
 		$key = "{$id}-{$type}";
 
-		if ( ! isset(self::$registeredSources[$key]) ) {
+		if (! isset(self::$registeredSources[$key])) {
 			return null;
 		}
 
 		extract(self::$registeredSources[$key]);
 
-		if ( isset($dependencies) && ! empty($dependencies) ) {
-			foreach ( $dependencies as $dependency_id ) {
+		if (isset($dependencies) && ! empty($dependencies)) {
+			foreach ($dependencies as $dependency_id) {
 				self::printScript($dependency_id, $type);
 			}
 		}
@@ -129,9 +129,9 @@ class AssetManager {
 	 */
 
 	protected static function confirmLoaded($key, $autopush = false) {
-		if ( in_array($key, self::$loadedSources, false) ) {
+		if (in_array($key, self::$loadedSources, false)) {
 			return false;
-		} elseif ( true === $autopush ) {
+		} elseif (true === $autopush) {
 			array_push(self::$loadedSources, $key);
 		}
 

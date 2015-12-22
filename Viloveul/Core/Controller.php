@@ -61,7 +61,7 @@ abstract class Controller extends Object {
 		$request = preg_split('/\//', $requestSegment, -1, PREG_SPLIT_NO_EMPTY);
 		$method = 'action' . str_replace(' ', '', ucwords(str_replace('-', ' ', $request)));
 
-		if ( ! self::hasMethod($method) )
+		if (! self::hasMethod($method))
 			return false;
 
 		$classname = self::classname();
@@ -75,9 +75,9 @@ abstract class Controller extends Object {
 			$ref = new ReflectionMethod($classname, $method);
 			$output = $ref->invokeArgs($controller, $request);
 
-			if ( ! is_null($output) ) {
+			if (! is_null($output)) {
 
-				if ( true !== $print ) {
+				if (true !== $print) {
 					return $output;
 				}
 

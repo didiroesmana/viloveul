@@ -121,11 +121,11 @@ class Request {
 	protected static function parseRequestUri() {
 		static $request = null;
 
-		if ( is_null($request) ) {
+		if (is_null($request)) {
 
 			$request = '/';
 
-			if ( ! isset($_SERVER['REQUEST_URI'], $_SERVER['SCRIPT_NAME'])) {
+			if (! isset($_SERVER['REQUEST_URI'], $_SERVER['SCRIPT_NAME'])) {
 				return $request;
 			}
 
@@ -135,13 +135,12 @@ class Request {
 			$query = isset($parts['query']) ? $parts['query'] : '';
 			$script = $_SERVER['SCRIPT_NAME'];
 
-			if ( 0 === strpos($path, $script) ) {
+			if (0 === strpos($path, $script)) {
 				$path = substr($path, strlen($script));
 
 			} else {
 				$dirname = dirname($script);
-
-				if ( 0 === strpos($path, $dirname) ) {
+				if (0 === strpos($path, $dirname)) {
 					$path = substr($path, strlen($dirname));
 				}
 			}
@@ -165,11 +164,9 @@ class Request {
 	protected static function parseCommandLine() {
 		static $request = null;
 
-		if ( is_null($request) ) {
-
+		if (is_null($request)) {
 			$request = '/';
-
-			if ( ! isset($_SERVER['argv']) ) {
+			if (! isset($_SERVER['argv'])) {
 				return $request;
 			}
 

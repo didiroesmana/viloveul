@@ -39,8 +39,8 @@ class Response {
 		$this->contentType = 'text/html';
 		$this->headers = array();
 
-		if ( $lvl = ob_get_level() ) {
-			for ( $i = $lvl; $i > 0; $i-- ) {
+		if ($lvl = ob_get_level()) {
+			for ($i = $lvl; $i > 0; $i--) {
 				ob_flush();
 			}
 		}
@@ -127,7 +127,7 @@ class Response {
 	public function send($data = null) {
 		is_null($data) or $this->setOutput($data, true);
 
-		if ( ! headers_sent() ) {
+		if ! headers_sent()) {
 
 			$headers = array_map(
 				'unserialize',
@@ -136,7 +136,7 @@ class Response {
 				)
 			);
 
-			foreach ( $headers as $header ) {
+			foreach ($headers as $header) {
 				header($header[0], $header[1]);
 			}
 
@@ -163,7 +163,7 @@ class Response {
 			Configure::siteurl($target) :
 				$target;
 
-		if ( ! headers_sent() ) {
+		if (! headers_sent()) {
 			header("Location: {$url}");
 			exit();
 		}

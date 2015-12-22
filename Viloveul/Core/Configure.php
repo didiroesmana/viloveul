@@ -21,12 +21,12 @@ class Configure {
 	public static function baseurl($followed = '/') {
 		static $baseurl = null;
 
-		if ( is_null($baseurl) ) {
+		if (is_null($baseurl)) {
 			if ( $config_baseurl = self::read('baseurl', 'trim') ) {
 				$baseurl = rtrim($config_baseurl, '/') . '/';
 			} else {
 				$host = self::server('http_host');
-				if ( $host != 'localhost' ) {
+				if ($host != 'localhost') {
 					$url = (self::supportHttps() ? 'https://' : 'http://') . $host;
 				} else {
 					$url = 'http://localhost';
@@ -38,7 +38,7 @@ class Configure {
 			}
 		}
 
-		if ( ! empty($followed) && '/' != $followed ) {
+		if (! empty($followed) && '/' != $followed) {
 			return $baseurl . ltrim($followed, '/');
 		}
 
@@ -56,29 +56,29 @@ class Configure {
 	public static function siteurl($followed = '/') {
 		static $siteurl = null;
 
-		if ( is_null($siteurl) ) {
+		if (is_null($siteurl)) {
 			$index_page = self::read('index_page', 'trim');
 			$siteurl = rtrim(self::baseurl("/{$index_page}"), '/');
 		}
 
 		$dynamic_url = $siteurl;
 
-		if ( ! empty($followed) && '/' != $followed ) {
+		if (! empty($followed) && '/' != $followed) {
 			$parts = explode('?', $followed);
 			$trailing_slash = (substr($parts[0], strlen($parts[0])-1, 1) == '/');
 
 			$dynamic_url .= rtrim($parts[0], '/');
 
-			if ( ! $trailing_slash ) {
+			if (! $trailing_slash) {
 				$urlsuffix = self::read('url_suffix', 'trim');
-				if ( $urlsuffix && ! preg_match('#'.$urlsuffix.'$#', $parts[0]) ) {
+				if ($urlsuffix && ! preg_match('#'.$urlsuffix.'$#', $parts[0])) {
 					$dynamic_url .= $urlsuffix;
 				}
 			} else {
 				$dynamic_url .= '/';
 			}
 
-			if ( isset($parts[1]) && ! empty($parts[1]) ) {
+			if (isset($parts[1]) && ! empty($parts[1])) {
 				$dynamic_url .= '?' . $parts[1];
 			}
 		}
@@ -96,10 +96,10 @@ class Configure {
 	public static function supportHttps() {
 		static $https = null;
 
-		if ( is_null($https) ) {
-			if ( self::server('https', true) == 'on' || 1 == self::server('https') ) {
+		if (is_null($https)) {
+			if (self::server('https', true) == 'on' || 1 == self::server('https')) {
 				$https = true;
-			} elseif ( 443 == self::server('server_port') ) {
+			} elseif (443 == self::server('server_port')) {
 				$https = true;
 			} else {
 				$https = false;
@@ -154,12 +154,12 @@ class Configure {
 	 */
 
 	public static function write($data, $value = null) {
-		if ( is_string($data) ) {
+		if (is_string($data)) {
 			return self::write(array($data => $value));
 		}
 
-		foreach ( (array) $data as $key => $val ) {
-			if ( ! array_key_exists($key, self::$configs) ) {
+		foreach ((array) $data as $key => $val) {
+			if (! array_key_exists($key, self::$configs)) {
 				self::$configs[$key] = $val;
 			}
 		}

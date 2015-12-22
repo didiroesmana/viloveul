@@ -32,7 +32,7 @@ class Anchor extends Object {
 		$this->src = $src;
 		$this->text = $text;
 
-		if ( is_array($param) ) {
+		if (is_array($param)) {
 			$this->addAttr($param);
 		} else {
 			$this->title = $param;
@@ -57,7 +57,7 @@ class Anchor extends Object {
 	 */
 
 	public function __call($method, $params) {
-		if ( method_exists($this->htmlAttribute, $method) ) {
+		if (method_exists($this->htmlAttribute, $method)) {
 			call_user_func_array(array(&$this->htmlAttribute, $method), $params);
 		}
 		return $this;
@@ -82,8 +82,8 @@ class Anchor extends Object {
 		$text = empty($this->text) ? $src : $this->text;
 		$title = empty($this->title) ? $text : $this->title;
 
-		if ( $this->autoActive === true ) {
-			if ( $href == Request::currenturl() ) {
+		if ($this->autoActive === true) {
+			if ($href == Request::currenturl()) {
 				$this->addAttr('class', 'active');
 			}
 		}
@@ -102,7 +102,7 @@ class Anchor extends Object {
 	 */
 
 	public function autoActiveClass($value) {
-		if ( is_boolean($value) ) {
+		if (is_boolean($value)) {
 			$this->autoActive = $value;
 		}
 		return $this;

@@ -27,18 +27,6 @@ class Application implements ArrayAccess {
 	private $basepath = null;
 
 	/**
-	 * mapping before filter callbacks
-	 */
-
-	protected $beforeActions = array();
-
-	/**
-	 * mapping after filter callbacks
-	 */
-
-	protected $afterActions = array();
-
-	/**
 	 * mapping Collections
 	 */
 
@@ -124,7 +112,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function offsetSet($name, $value) {
-		if ( ! is_null($name)) {
+		if (! is_null($name)) {
 			$this->dataOffset[$name] = $value;
 		}
 	}
@@ -139,7 +127,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function offsetGet($name) {
-		if ( ! $this->offsetExists($name) ) {
+		if (! $this->offsetExists($name)) {
 			return null;
 		}
 
@@ -157,7 +145,7 @@ class Application implements ArrayAccess {
 	 */
 
 	public function offsetUnset($name) {
-		if ( $this->offsetExists($name) ) {
+		if ($this->offsetExists($name)) {
 			unset($this->dataOffset[$name]);
 		}
 	}
@@ -186,19 +174,18 @@ class Application implements ArrayAccess {
 	 */
 
 	public function handle($route, $callable) {
-		$params = func_get_args();
-
-		if ( count($params) > 3 ) {
+		if (func_num_args() > 3) {
 			throw new Exception('Parameter is only accepted maximal 3 arguments');
 		}
 
+		$params = func_get_args();
 		$handler = array_pop($params);
 
 		$callback = (is_object($handler) && method_exists($handler, 'bindTo')) ?
 			$handler->bindTo($this, $this) :
 				$handler;
 
-		if ( count($params) > 1 ) {
+		if (count($params) > 1) {
 			$methods = array_shift($params);
 			foreach ($methods as $method) {
 				if (Http\Request::method($method)) {
@@ -218,59 +205,7 @@ class Application implements ArrayAccess {
 				$this->routeCollection->add($key, $callback);
 			endforeach;
 		}
-
 		return $this;
-	}
-
-	/**
-	 * filterAction
-	 * 
-	 * @access	public
-	 * @param	Callable|Boolean
-	 * @param	[mixed] Callable
-	 * @return	void
-	 */
-
-	public function filterAction($filter) {
-		$params = func_get_args();
-		$handler = array_pop($params);
-		if ( $this->isInvokable($handler) ) {
-			if ( isset($params[0]) && $params[0] === true ) {
-				$this->afterActions[] = $handler;
-			} else {
-				$this->beforeActions[] = $handler;
-			}
-		}
-		return $this;
-	}
-
-	/**
-	 * applyFilter
-	 * 
-	 * @access	public
-	 * @param	Array
-	 * @return	String
-	 */
-
-	public function applyFilter($filters) {
-		$data = '';
-
-		if ( count($filters) > 0 ) {
-			$data = array_reduce($filters, function($carry, $item){
-				ob_start();
-					$filter = call_user_func($item);
-					$output = ob_get_contents();
-				ob_end_clean();
-				if ( ! is_null($filter) ) {
-					$carry .= $filter;
-				} elseif ( ! is_null($output) ) {
-					$carry .= $output;
-				}
-				return $carry;
-			});
-		}
-		
-		return $data;
 	}
 
 	/**
@@ -286,17 +221,15 @@ class Application implements ArrayAccess {
 
 		$handler = $this->dispatcher->fetchHandler();
 
-		if ( empty($handler) ) {
+		if (empty($handler)) {
 			throw new Exception('handler does not found');
 		}
 
 		try {
 
 			$reflection = new ReflectionFunction($handler);
-			$before = $this->applyFilter($this->beforeActions);
-			$output = $reflection->invoke($this->dispatcher->fetchVars());
-			$after = $this->applyFilter($this->afterActions);
-			$this->response->send($before.$output.$after);
+			$output = $reflection->invoke($this->dispatcher->fetchParams());
+			$this->response->send($output);
 
 		} catch (ReflectionException $e) {
 			Debugger::handleException($e);
@@ -332,9 +265,9 @@ class Application implements ArrayAccess {
 		if ( 0 === strpos($name, 'App/') ) {
 
 			$location = $this->realpath().'/'.substr($name, 4);
-			$this->loadFileClass($location);
+			$this->locateClass($location);
 
-		} elseif ( false === strpos($name, '/') ) {
+		} elseif (false === strpos($name, '/')) {
 			$location = $this->realpath().'/Libraries';
 
 			/**
@@ -344,25 +277,23 @@ class Application implements ArrayAccess {
 
 			do {
 				$location .= '/'.$name;
-
-				if ( false !== $this->loadFileClass($location) ) {
+				if (false !== $this->locateClass($location)) {
 					break;
 				}
-
-			} while ( is_dir($location) );
+			} while (is_dir($location));
 		}
 	}
 
 	/**
-	 * loadFileClass
+	 * locateClass
 	 * 
 	 * @access	public
 	 * @param	String
 	 * @return	Boolean false when file does not exists
 	 */
 
-	public static function loadFileClass($location) {
-		if ( ! is_file("{$location}.php") ) {
+	public static function locateClass($location) {
+		if (! is_file("{$location}.php")) {
 			return false;
 		}
 		require_once "{$location}.php";
@@ -380,7 +311,7 @@ class Application implements ArrayAccess {
 		return function($c) use ($callback) {
 			static $object = null;
 
-			if ( is_null($object) ) {
+			if (is_null($object)) {
 				$object = $callback($c);
 			}
 

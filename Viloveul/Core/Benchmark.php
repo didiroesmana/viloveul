@@ -28,7 +28,7 @@ class Benchmark {
 	 */
 
 	public static function mark($name, $overwrite = false) {
-		if ( ! isset(self::$markedPoints[$name]) || true === $overwrite) {
+		if (! isset(self::$markedPoints[$name]) || true === $overwrite) {
 			self::$markedPoints[$name] = microtime(true);
 		}
 	}
@@ -44,14 +44,14 @@ class Benchmark {
 	 */
 
 	public static function elapsedTime($name, $param = 4) {
-		if ( isset(self::$markedPoints[$name]) ) {
+		if (isset(self::$markedPoints[$name])) {
 			$args = array_slice(func_get_args(), 1);
 			$decimal = array_pop($args);
 
 			$start = self::$markedPoints[$name];
 
-			if ( ($c = count($args)) > 0 ) {
-				for ( $i = 0; $i < $c; $i++ ) {
+			if (($c = count($args)) > 0) {
+				for ($i = 0; $i < $c; $i++) {
 					self::mark($args[$i]);
 				}
 				$stop = self::$markedPoints[$args[0]];

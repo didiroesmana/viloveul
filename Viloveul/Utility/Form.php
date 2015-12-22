@@ -42,7 +42,7 @@ class Form extends Object {
 	public function __construct($url = '', array $hiddenFields = array(), $html5 = false) {
 		self::$form_id++;
 
-		if ( $url ) {
+		if ($url) {
 			$this->httpAction = preg_match('#^http(s)?\:\/\/#', $url) ? $url : COnfigure::siteurl($url);
 		} else {
 			$this->httpAction = Request::currenturl();
@@ -71,21 +71,21 @@ class Form extends Object {
 			'accept-charset' => 'utf8'
 		);
 
-		if ( $params === 'multipart/form-data' ) {
+		if ($params === 'multipart/form-data') {
 			$defaults['enctype'] = $params;
 			$params = null;
 
-		} elseif ( true === $formData ) {
+		} elseif (true === $formData) {
 			$defaults['enctype'] = 'multipart/form-data';
-			if ( is_array($params) && isset($params['enctype']) ) {
+			if (is_array($params) && isset($params['enctype'])) {
 				unset($params['enctype']);
 			}
 		}
 
 		$html = '<form ' . $this->addAttributes($params, $defaults) . '>' . "\n";
 
-		if ( count($this->hiddenFields) > 0 ) {
-			foreach ( $this->hiddenFields as $hiddenName => $hiddenValue ) {
+		if (count($this->hiddenFields) > 0) {
+			foreach ($this->hiddenFields as $hiddenName => $hiddenValue) {
 				$html .= $this->inputHidden($hiddenName, $hiddenValue);
 			}
 		}
@@ -104,7 +104,7 @@ class Form extends Object {
 	public function close(array $hiddenFields = array()) {
 		$html = '';
 
-		foreach ( $hiddenFields as $hiddenName => $hiddenValue ) {
+		foreach ($hiddenFields as $hiddenName => $hiddenValue) {
 			$html .= $this->inputHidden($hiddenName, $hiddenValue);
 		}
 
@@ -212,13 +212,13 @@ class Form extends Object {
 		$id = $class = $this->generateId();
 		$type = 'radio';
 		$defaults = compact('name', 'value', 'id', 'class', 'type');
-		if ( 'post' == Request::method('strtolower') ) {
+		if ('post' == Request::method('strtolower')) {
 			$checked = ( $value == $this->catchValue($name) );
 		}
 
-		if ( true === $checked ) {
+		if (true === $checked) {
 			$defaults['checked'] = 'checked';
-		} elseif ( ! is_bool($checked) ) {
+		} elseif (! is_bool($checked)) {
 			$params = $checked;
 		}
 
@@ -240,15 +240,15 @@ class Form extends Object {
 		$id = $class = $this->generateId();
 		$type = 'checkbox';
 		$defaults = compact('name', 'value', 'id', 'class', 'type');
-		if ( 'post' == Request::method('strtolower') ) {
+		if (Request::isMethod('post')) {
 			$checked = ( $value === $this->catchValue($name) );
 		}
 
-		if ( true === $checked ) {
+		if (true === $checked) {
 			$defaults['checked'] = 'checked';
 		}
 
-		if ( ! is_bool($checked) ) {
+		if (! is_bool($checked)) {
 			$params = $checked;
 		}
 
@@ -267,16 +267,16 @@ class Form extends Object {
 	 */
 
 	public function dropdown($name, $options = array(), $selected = array(), $params = null) {
-		if ( ! is_array($selected) ) {
+		if (! is_array($selected)) {
 			$selected = is_string($selected) ?
 				array($selected) :
 					(array) $selected;
 		}
 
-		if ( count($selected) < 1 || empty($selected[0]) ) {
-			if ( isset($_POST[$name]) ) {
+		if (count($selected) < 1 || empty($selected[0])) {
+			if (isset($_POST[$name])) {
 				$tmp = $_POST[$name];
-				if ( ! is_array($tmp) ) {
+				if (! is_array($tmp)) {
 					$selected = is_string($tmp) ?
 						array($tmp) :
 							(array) $tmp;
@@ -288,8 +288,8 @@ class Form extends Object {
 
 		$id = $class = $this->generateId();
 
-		if ( is_string($params) && false !== strpos($params, 'multiple') ) {
-			if ( strpos($params, 'multiple=multiple') === false ) {
+		if (is_string($params) && false !== strpos($params, 'multiple')) {
+			if (strpos($params, 'multiple=multiple') === false) {
 				$params = 'multiple=multiple';
 			}
 			$name = "{$name}[]";
@@ -299,16 +299,16 @@ class Form extends Object {
 		$attributes = $this->addAttributes($params, $defaults);
 		$isMultiple = false;
 
-		if ( strpos($attributes, 'multiple') !== false ) {
+		if (strpos($attributes, 'multiple') !== false) {
 			$isMultiple = true;
 		}
 
 		$html = '<select ' . $attributes . '>' . "\n";
-		foreach ( $options as $k => $v ) {
-			if ( is_array($v) ) {
+		foreach ($options as $k => $v) {
+			if (is_array($v)) {
 				$html .= '<optgroup label="' . $k . '">';
-				foreach ( $v as $optk => $optv ) {
-					if ( in_array($optk, $selected) ) {
+				foreach ($v as $optk => $optv) {
+					if (in_array($optk, $selected)) {
 						$html .= sprintf('<option value="%s" selected="selected">%s</option>', $optk, $optv) . "\n";
 					} else {
 						$html .= sprintf('<option value="%s">%s</option>', $optk, $optv) . "\n";
@@ -316,7 +316,7 @@ class Form extends Object {
 				}
 				$html .= '</optgroup>';
 			} else {
-				if ( in_array($k, $selected) ) {
+				if (in_array($k, $selected)) {
 					$html .= sprintf('<option value="%s" selected="selected">%s</option>', $k, $v) . "\n";
 				} else {
 					$html .= sprintf('<option value="%s">%s</option>', $k, $v) . "\n";
@@ -358,18 +358,18 @@ class Form extends Object {
 	 */
 
 	public function input($type, $name, $value, $params) {
-		if ( $type == 'textarea' ) {
+		if ($type == 'textarea') {
 			return $this->textarea($name, $value, $params);
 		}
 
 		$id = $class = $this->generateId();
 		$defaults = compact('name', 'type', 'id', 'class');
-		if ( 'file' != $type ) {
-			if ( is_array($value) ) {
+		if ('file' != $type) {
+			if (is_array($value)) {
 				$params = $value;
-			} elseif ( is_array($params) && ! isset($params['value']) ) {
+			} elseif (is_array($params) && ! isset($params['value'])) {
 				$params['value'] = $value;
-			} elseif ( is_string($params) ) {
+			} elseif (is_string($params)) {
 				$params = trim($params.'&value='.$value, '&');
 			}
 		}
@@ -388,7 +388,7 @@ class Form extends Object {
 	 */
 
 	public function catchValue($field, $default = null) {
-		if ( 'post' == Request::method('strtolower') || ! isset($_POST[$field]) ) {
+		if ('post' == Request::method('strtolower') || ! isset($_POST[$field])) {
 			return $default;
 		}
 
@@ -419,18 +419,18 @@ class Form extends Object {
 
 	protected function addAttributes($params, $defaults = array()) {
 		$args = array();
-		if ( is_array($params) ) {
+		if (is_array($params)) {
 			$args = $params;
-		} elseif ( is_object($params) ) {
+		} elseif (is_object($params)) {
 			$args = get_object_vars($params);
-		} elseif ( is_string($params) ) {
+		} elseif (is_string($params)) {
 			parse_str($params, $args);
 		}
 
 		$attributes = array_merge((array) $defaults, $args);
 		$validAttributes = array();
-		if ( ! empty($attributes) ) {
-			foreach ( $attributes as $attrKey => $attrVal ) {
+		if (! empty($attributes)) {
+			foreach ($attributes as $attrKey => $attrVal) {
 				$validAttributes[] = sprintf('%s="%s"', $attrKey, is_array($attrVal) ? implode(' ', $attrVal) : $attrVal);
 			}
 		}

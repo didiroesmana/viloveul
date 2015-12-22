@@ -41,9 +41,9 @@ class HtmlAttribute {
 	 */
 
 	public function addAttr($data, $value = '', $param = null) {
-		if ( empty($data) ) return $this;
+		if (empty($data)) return $this;
 
-		if ( is_string($data) ) {
+		if (is_string($data)) {
 			if ( $data == 'data' ) {
 				$this->dataAttributes[$value] = (string) $param;
 			} elseif ( $data == 'class' ) {

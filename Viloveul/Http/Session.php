@@ -28,13 +28,13 @@ class Session implements ArrayAccess {
 			'httponly' => false
 		);
 
-		if ( is_string($sessionName) ) {
+		if (is_string($sessionName)) {
 			$this->options = array_merge($defaultOptions, array('name' => $sessionName));
 		} else {
 			$this->options = array_merge($defaultOptions, (array) $sessionName);
 		}
 
-		if ( empty($this->options['name']) ) {
+		if (empty($this->options['name'])) {
 			$this->options['name'] = 'zafex';
 		}
 
@@ -42,20 +42,20 @@ class Session implements ArrayAccess {
 
 		register_shutdown_function('session_write_close');
 
-		if ( session_id() === '' ) {
+		if (session_id() === '') {
 			session_name($this->sessionName);
 			session_start();
 		}
 
-		if ( ! isset($_SESSION['__vars']) ) {
+		if (! isset($_SESSION['__vars'])) {
 			$_SESSION['__vars'] = array();
 
-		} elseif ( ! is_array($_SESSION['__vars']) ) {
+		} elseif (! is_array($_SESSION['__vars'])) {
 			unset($_SESSION['__vars']);
 			$_SESSION['__vars'] = array();
 		}
 
-		if ( isset($_SESSION['__flashdata']) ) {
+		if (isset($_SESSION['__flashdata'])) {
 			$this->flashvars = (array) $_SESSION['__flashdata'];
 			unset($_SESSION['__flashdata']);
 		}
@@ -83,7 +83,7 @@ class Session implements ArrayAccess {
 	 */
 
 	public function offsetSet($name, $value) {
-		if ( ! is_null($name) ) {
+		if (! is_null($name)) {
 			$this->set(array($name => $value));
 		}
 	}
@@ -135,11 +135,11 @@ class Session implements ArrayAccess {
 	 */
 
 	public function set($data, $value = null) {
-		if ( is_string($data) ) {
+		if (is_string($data)) {
 			return $this->set(array($data => $value));
 		}
 
-		foreach ( (array) $data as $key => $val ) {
+		foreach ((array) $data as $key => $val) {
 			$_SESSION['__vars'][$key] = $val;
 		}
 
@@ -169,7 +169,7 @@ class Session implements ArrayAccess {
 	 */
 
 	public function delete($name) {
-		if ( $this->has($name) ) {
+		if ($this->has($name)) {
 			unset($_SESSION['__vars'][$name]);
 		}
 	}
@@ -220,11 +220,11 @@ class Session implements ArrayAccess {
 	 */
 
 	public function createFlashdata($data, $value = null) {
-		if ( is_string($data) ) {
+		if (is_string($data)) {
 			return $this->createFlashdata(array($data => $value));
 		}
 
-		foreach ( (array) $data as $key => $val ) {
+		foreach ((array) $data as $key => $val) {
 			$_SESSION['__flashdata'][$key] = $val;
 		}
 		return $this;
@@ -254,7 +254,7 @@ class Session implements ArrayAccess {
 	 */
 
 	public function keepFlashdata($key) {
-		if ( array_key_exists($key, $this->flashvars) ) {
+		if (array_key_exists($key, $this->flashvars)) {
 			$_SESSION['__flashdata'][$key] = $this->flashvars[$key];
 		}
 		return $this;

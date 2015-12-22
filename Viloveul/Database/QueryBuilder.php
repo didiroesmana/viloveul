@@ -128,17 +128,17 @@ class QueryBuilder {
 	 */
 
 	public function get() {
-		if ( count($this->tables) < 1 )
+		if (count($this->tables) < 1)
 			throw new Exception('table not selected');
 
-		if ( count($this->selections) < 1 ) {
+		if (count($this->selections) < 1) {
 			$selectionField = '*';
 		} else {
 			$selections = array();
-			foreach ( $this->selections as $selection ) {
+			foreach ($this->selections as $selection) {
 				$field = array_shift($selection);
 				$pos = strpos($field, '|');
-				if ( $pos !== false ) {
+				if ($pos !== false) {
 					$selections[] = $this->trackAliases(
 						substr($field, 0, $pos),
 						substr($field, $pos),
@@ -157,15 +157,14 @@ class QueryBuilder {
 
 		$fromTable = '';
 		$tables = array();
-		foreach ( $this->tables as $table ) {
+		foreach ($this->tables as $table) {
 			$tableName = array_shift($table);
 			$prepTable = array_shift($table);
 			$protect = isset($table[0]) ? (boolean) $table[0] : true;
 			$pos = strpos($tableName, '|');
 
-			if ( $pos !== false ) {
-
-				if ( true === $prepTable ) {
+			if ($pos !== false) {
+				if (true === $prepTable) {
 					$tables[] = $this->trackAliases(
 						$this->scenario->prepTable(substr($field, 0, $pos), $protect),
 							$this->scenario->protectIdentifier($tableName);
@@ -176,8 +175,7 @@ class QueryBuilder {
 				}
 				
 			} else {
-
-				if ( true === $prepTable ) {
+				if (true === $prepTable) {
 					$tables[] = $this->scenario->prepTable($tableName, $protect);
 				} else {
 					$tables[] = (true === $protect) ?
@@ -224,7 +222,7 @@ class QueryBuilder {
 	 */
 
 	protected function trackAliases($real, $alias, $protectIdentifier = true) {
-		if ( true !== $protectIdentifier ) {
+		if (true !== $protectIdentifier) {
 			return sprintf('%s AS %s', $real, $alias);
 		}
 		return sprintf(
