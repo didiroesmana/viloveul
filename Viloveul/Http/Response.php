@@ -127,7 +127,7 @@ class Response {
 	public function send($data = null) {
 		is_null($data) or $this->setOutput($data, true);
 
-		if ! headers_sent()) {
+		if (! headers_sent()) {
 
 			$headers = array_map(
 				'unserialize',
