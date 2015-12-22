@@ -33,7 +33,7 @@ class RouteCollection implements Iterator {
 	 */
 
 	public function has($pattern) {
-		return isset($pattern, $this->collections);
+		return array_key_exists($pattern, $this->collections);
 	}
 
 	/**

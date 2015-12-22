@@ -52,7 +52,7 @@ class View extends Object {
 
 	public static function make($name, array $data = array()) {
 		self::globalDataSet($data, null);
-		return self::createInstance($name)->render();
+		return self::createInstance($name);
 	}
 
 	/**
@@ -92,21 +92,6 @@ class View extends Object {
 	}
 
 	/**
-	 * changeDirectory
-	 * 
-	 * @access	public
-	 * @param	String realpath
-	 * @return	void
-	 */
-
-	public function changeDirectory($path) {
-		if ( is_dir($path) ) {
-			$this->directory = rtrim(realpath($path), '/');
-		}
-		return $this;
-	}
-
-	/**
 	 * render
 	 * 
 	 * @access	public
@@ -115,13 +100,11 @@ class View extends Object {
 	 */
 
 	public function render($__local281291callbackFilter = null) {
-		if ( is_null($this->directory) ) {
-			$this->directory = Application::realpath() . '/Views';
-		}
+		$this->directory = Application::realpath() . '/Views';
 
 		$__local281291vars = array_merge(self::$data, $this->vars);
 		$__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
-		$__local281291filename = $this->directory . '/'.implode('/', $__local281291fileparts).'.php';
+		$__local281291filename = $this->directory . '/' . implode('/', $__local281291fileparts).'.php';
 
 		if ( ! is_file($__local281291filename) ) {
 			throw new Exception('Unable to locate view : ' . $__local281291filename);
@@ -156,7 +139,7 @@ class View extends Object {
 	public function get($var, $defaultValue = null) {
 		if (array_key_exists($name, $this->vars)) {
 			return $this->vars[$var];
-		} elseif (array_key_exists($name, self::$data) {
+		} elseif (array_key_exists($name, self::$data)) {
 			return self::$data[$var];
 		}
 
