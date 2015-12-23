@@ -65,7 +65,7 @@ class Request {
 	}
 
 	/**
-	 * method
+	 * isMethod
 	 * Compare param with current request
 	 * 
 	 * @access	public
@@ -73,7 +73,7 @@ class Request {
 	 * @return	Boolean
 	 */
 
-	public static function method($option) {
+	public static function isMethod($option) {
 		if (in_array($option, array('put', 'patch', 'delete', 'options'))) {
 			return (isset($_POST['_METHOD']) && strtolower($_POST['_METHOD']) == $option);
 		}

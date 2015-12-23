@@ -22,9 +22,9 @@ class Application implements ArrayAccess {
 
 	private static $instance;
 
-	private $realpath = null;
+	protected $realpath = null;
 
-	private $basepath = null;
+	protected $basepath = null;
 
 	/**
 	 * mapping Collections
@@ -168,14 +168,13 @@ class Application implements ArrayAccess {
 	 * add handler for request
 	 * 
 	 * @access	public
-	 * @param	[mixed] String|Array
-	 * @param	[mixed] String|Closure|Array
-	 * @param	[mixed] Closure
+	 * @param	[mixed]
+	 * @return	void
 	 */
 
-	public function handle($route, $callable) {
+	public function handle($param) {
 		if (func_num_args() > 3) {
-			throw new Exception('Parameter is only accepted maximal 3 arguments');
+			// throw new Exception('Parameter is only accepted maximal 3 arguments');
 		}
 
 		$params = func_get_args();
@@ -187,18 +186,17 @@ class Application implements ArrayAccess {
 
 		if (count($params) > 1) {
 			$methods = array_shift($params);
-			foreach ($methods as $method) {
-				if (Http\Request::method($method)) {
+			foreach ((array) $methods as $method) {
+				if (Http\Request::isMethod($method)) {
 					foreach ((array) $params[0] as $key) {
-						if ($this->routeCollection->has($key)) {
-							continue;
+						if (! $this->routeCollection->has($key)) {
+							$this->routeCollection->add($key, $callback);
 						}
-						$this->routeCollection->add($key, $callback);
 					}
 				}
 			}
 		} else {
-			foreach ((array) $route as $key) :
+			foreach ((array) $params[0] as $key) :
 				if ($this->routeCollection->has($key)) {
 					continue;
 				}

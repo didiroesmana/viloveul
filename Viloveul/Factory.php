@@ -11,12 +11,12 @@ class Factory {
 
 	/**
 	 * Constructor
-	 * Keep silence
 	 * 
-	 * @access	private
+	 * @access	public
+	 * @return	void
 	 */
 
-	private function __construct() {
+	public function __construct() {
 	}
 
 	/**
@@ -44,9 +44,9 @@ class Factory {
 		$class = ltrim($class, '\\');
 		$name = str_replace('\\', '/', $class);
 
-		if ( 0 === strpos($name, 'Viloveul/') ) {
+		if (0 === strpos($name, 'Viloveul/')) {
 			$location = dirname(__DIR__).'/'.$name.$php;
-			is_file($location) && require_once($location);
+			is_file($location) and require_once($location);
 		}
 	}
 
@@ -62,7 +62,7 @@ class Factory {
 	public static function serve($path) {
 		$realpath = realpath($path);
 
-		if ( false === $realpath ) {
+		if (false === $realpath) {
 			die('Application path does not appear.');
 		}
 
