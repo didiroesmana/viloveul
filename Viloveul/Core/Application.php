@@ -165,16 +165,12 @@ class Application implements ArrayAccess
      * add handler for request.
      *
      * @param   [mixed]
+     * @param   [mixed]
      */
-    public function handle($param)
+    public function handle($arg1, $arg2)
     {
-        if (func_num_args() > 3) {
-            // throw new Exception('Parameter is only accepted maximal 3 arguments');
-        }
-
         $params = func_get_args();
         $handler = array_pop($params);
-
         $callback = (is_object($handler) && method_exists($handler, 'bindTo')) ?
             $handler->bindTo($this, $this) :
                 $handler;
@@ -182,20 +178,17 @@ class Application implements ArrayAccess
         if (count($params) > 1) {
             $methods = array_shift($params);
             foreach ((array) $methods as $method) {
-                if (Http\Request::isMethod($method)) {
+                if (Http\Request::isMethod($method) || 'any' === $method) {
                     foreach ((array) $params[0] as $key) {
-                        if (!$this->routeCollection->has($key)) {
-                            $this->routeCollection->add($key, $callback);
-                        }
+                        $this->routeCollection->has($key)
+                            or $this->routeCollection->add($key, $callback);
                     }
                 }
             }
         } else {
             foreach ((array) $params[0] as $key) :
-                if ($this->routeCollection->has($key)) {
-                    continue;
-                }
-            $this->routeCollection->add($key, $callback);
+                $this->routeCollection->has($key)
+                    or $this->routeCollection->add($key, $callback);
             endforeach;
         }
 
@@ -208,7 +201,10 @@ class Application implements ArrayAccess
      */
     public function run()
     {
-        $this->dispatcher->dispatch(Http\Request::createFromGlobals(), Configure::read('url_suffix'));
+        $this->dispatcher->dispatch(
+            Http\Request::createFromGlobals(),
+            Configure::read('url_suffix')
+        );
 
         $handler = $this->dispatcher->fetchHandler();
 

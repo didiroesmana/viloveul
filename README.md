@@ -7,6 +7,8 @@ Mini PHP MVC with url-routing.
 ```php
 require_once 'path-to-viloveul/Viloveul/Factory.php';
 
+Viloveul\Factory::registerSystemAutoloader();
+
 $app = Viloveul\Factory::serve($applicationDirectory);
 
 $app->handle('/', function() {

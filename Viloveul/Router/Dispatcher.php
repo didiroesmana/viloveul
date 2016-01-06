@@ -126,7 +126,7 @@ class Dispatcher
                     function ($args = array()) use ($class) {
                         return call_user_func_array(new $class(), $args);
                     },
-                    array($request)
+                    array_merge(array(substr($method, 6)), $vars)
                 );
             } elseif (in_array($method, $availableMethods, true)) {
                 return $this->promote(
@@ -155,7 +155,7 @@ class Dispatcher
                             function ($args = array()) use ($eClass) {
                                 return call_user_func_array(new $eClass(), $args);
                             },
-                            array($request)
+                            preg_split('/\//', $request, -1, PREG_SPLIT_NO_EMPTY)
                         );
                     } elseif (in_array($eMethod, $eAvailableMethods, true)) {
                         return $this->promote(
@@ -173,7 +173,7 @@ class Dispatcher
                     function ($args = array()) use ($e404) {
                         return call_user_func_array($e404, $args);
                     },
-                    array($request)
+                    preg_split('/\//', $request, -1, PREG_SPLIT_NO_EMPTY)
                 );
             }
         }
