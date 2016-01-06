@@ -1,141 +1,143 @@
-<?php namespace Viloveul\Utility;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Utility
+namespace Viloveul\Utility;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Utility
  */
 
 use Viloveul\Core\Configure;
 
-class AssetManager {
+class AssetManager
+{
+    protected static $loadedSources = array();
 
-	protected static $loadedSources = array();
+    protected static $registeredSources = array();
 
-	protected static $registeredSources = array();
+    /**
+     * load.
+     *
+     * @param   string type
+     * @param   string id
+     * @param   string source target
+     *
+     * @return bool
+     */
+    public static function load($type, $id, $source)
+    {
+        $key = "{$id}-{$type}";
 
-	/**
-	 * load
-	 * 
-	 * @access	public
-	 * @param	String type
-	 * @param	String id
-	 * @param	String source target
-	 * @return	Boolean
-	 */
+        // make sure the source is only printed one at once time
 
-	public static function load($type, $id, $source) {
-		$key = "{$id}-{$type}";
+        if (!self::confirmLoaded($key, true)) {
+            return;
+        }
 
-		// make sure the source is only printed one at once time
+        $format = ($type == 'css') ?
+            '<link rel="stylesheet" type="text/css" id="%s" href="%s" />' :
+                '<script type="text/javascript" id="%s" src="%s"></script>';
 
-		if (! self::confirmLoaded($key, true)) {
-			return null;
-		}
+        printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
 
-		$format = ($type == 'css') ?
-			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
-				'<script type="text/javascript" id="%s" src="%s"></script>';
+        return true;
+    }
 
-		printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
+    /**
+     * registerSource.
+     *
+     * @param   string id
+     * @param   string source
+     * @param   [mixed] String type
+     *
+     * @return bool
+     */
+    public static function registerSource($id, $source, $dependency = null, $type = null)
+    {
+        if (is_null($type)) {
+            if (preg_match('#\.(css|js)$#', $source, $matches)) {
+                $type = $matches[1];
+            }
+        }
 
-		return true;
-	}
+        if (in_array($type, array('css', 'js'), true)) {
+            $dependencies = empty($dependency) ? array() : (is_string($dependency) ? array($dependency) : (array) $dependency);
+            self::$registeredSources["{$id}-{$type}"] = compact('source', 'dependencies');
 
-	/**
-	 * registerSource
-	 * 
-	 * @access	public
-	 * @param	String id
-	 * @param	String source
-	 * @param	[mixed] String type
-	 * @return	Boolean
-	 */
+            return true;
+        }
 
-	public static function registerSource($id, $source, $dependency = null, $type = null) {
-		if (is_null($type)) {
-			if (preg_match('#\.(css|js)$#', $source, $matches)) {
-				$type = $matches[1];
-			}
-		}
+        return false;
+    }
 
-		if (in_array($type, array('css', 'js'), true)) {
-			$dependencies = empty($dependency) ? array() : (is_string($dependency) ? array($dependency) : (array) $dependency);
-			self::$registeredSources["{$id}-{$type}"] = compact('source', 'dependencies');
-			return true;
-		}
+    /**
+     * printStyle.
+     *
+     * @param   string source id
+     * @param   string|array dependency(s)
+     *
+     * @return bool
+     */
+    public static function printStyle($id)
+    {
+        return self::printScript($id, 'css');
+    }
 
-		return false;
-	}
+    /**
+     * printScript.
+     *
+     * @param   string source id
+     * @param   string|array dependency(s)
+     * @param   string type
+     *
+     * @return bool
+     */
+    public static function printScript($id, $type = 'js')
+    {
+        $key = "{$id}-{$type}";
 
-	/**
-	 * printStyle
-	 * 
-	 * @access	public
-	 * @param	String source id
-	 * @param	String|Array dependency(s)
-	 * @return	Boolean
-	 */
+        if (!isset(self::$registeredSources[$key])) {
+            return;
+        }
 
-	public static function printStyle($id) {
-		return self::printScript($id, 'css');
-	}
+        extract(self::$registeredSources[$key]);
 
-	/**
-	 * printScript
-	 * 
-	 * @access	public
-	 * @param	String source id
-	 * @param	String|Array dependency(s)
-	 * @param	String type
-	 * @return	Boolean
-	 */
+        if (isset($dependencies) && !empty($dependencies)) {
+            foreach ($dependencies as $dependency_id) {
+                self::printScript($dependency_id, $type);
+            }
+        }
 
-	public static function printScript($id, $type = 'js') {
-		$key = "{$id}-{$type}";
+        self::load($type, $id, $source);
 
-		if (! isset(self::$registeredSources[$key])) {
-			return null;
-		}
+        return true;
 
-		extract(self::$registeredSources[$key]);
+        $format = ($type == 'css') ?
+            '<link rel="stylesheet" type="text/css" id="%s" href="%s" />' :
+                '<script type="text/javascript" id="%s" src="%s"></script>';
 
-		if (isset($dependencies) && ! empty($dependencies)) {
-			foreach ($dependencies as $dependency_id) {
-				self::printScript($dependency_id, $type);
-			}
-		}
+        printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
 
-		self::load($type, $id, $source);
+        return true;
+    }
 
-		return true;
+    /**
+     * confirmLoaded.
+     *
+     * @param   string key source
+     * @param   bool autopush when not loaded
+     *
+     * @return bool
+     */
+    protected static function confirmLoaded($key, $autopush = false)
+    {
+        if (in_array($key, self::$loadedSources, false)) {
+            return false;
+        } elseif (true === $autopush) {
+            array_push(self::$loadedSources, $key);
+        }
 
-		$format = ($type == 'css') ?
-			'<link rel="stylesheet" type="text/css" id="%s" href="%s" />':
-				'<script type="text/javascript" id="%s" src="%s"></script>';
-
-		printf("{$format}\n", $key, sprintf($source, rtrim(Configure::baseurl(), '/')));
-
-		return true;
-	}
-
-	/**
-	 * confirmLoaded
-	 * 
-	 * @access	protected
-	 * @param	String key source
-	 * @param	Boolean autopush when not loaded
-	 * @return	Boolean
-	 */
-
-	protected static function confirmLoaded($key, $autopush = false) {
-		if (in_array($key, self::$loadedSources, false)) {
-			return false;
-		} elseif (true === $autopush) {
-			array_push(self::$loadedSources, $key);
-		}
-
-		return true;
-	}
-
+        return true;
+    }
 }

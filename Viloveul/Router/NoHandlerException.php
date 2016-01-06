@@ -1,7 +1,9 @@
-<?php namespace Viloveul\Router;
+<?php
+
+namespace Viloveul\Router;
 
 use Exception;
 
-class NoHandlerException extends Exception {
-
+class NoHandlerException extends Exception
+{
 }

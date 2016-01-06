@@ -1,13 +1,14 @@
-<?php namespace Viloveul\Http;
+<?php
 
-class Uri {
+namespace Viloveul\Http;
 
-	public function __construct() {
-		
-	}
+class Uri
+{
+    public function __construct()
+    {
+    }
 
-	public function createRequest() {
-		
-	}
-
+    public function createRequest()
+    {
+    }
 }

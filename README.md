@@ -1,10 +1,10 @@
 # viloveul
-mini php mvc with url-routing
 
-### example to use :
+Mini PHP MVC with url-routing.
+
+### Example to use:
 
 ```php
-
 require_once 'path-to-viloveul/Viloveul/Factory.php';
 
 $app = Viloveul\Factory::serve($applicationDirectory);

@@ -1,93 +1,93 @@
-<?php namespace Viloveul\Router;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Router
+namespace Viloveul\Router;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Router
  */
 
 use Iterator;
 
-class RouteCollection implements Iterator {
+class RouteCollection implements Iterator
+{
+    protected $collections = array();
 
-	protected $collections = array();
+    /**
+     * add.
+     *
+     * @param   string
+     * @param   string|object
+     */
+    public function add($pattern, $handler)
+    {
+        $this->collections[$pattern] = $handler;
+    }
 
-	/**
-	 * add
-	 *
-	 * @access	public
-	 * @param	String
-	 * @param	String|Object
-	 */
+    /**
+     * has.
+     *
+     * @param   string
+     *
+     * @return bool
+     */
+    public function has($pattern)
+    {
+        return array_key_exists($pattern, $this->collections);
+    }
 
-	public function add($pattern, $handler) {
-		$this->collections[$pattern] = $handler;
-	}
+    /**
+     * fetch.
+     *
+     * @param   string
+     *
+     * @return string|object|null
+     */
+    public function fetch($pattern)
+    {
+        return $this->has($pattern) ?
+            $this->collections[$pattern] :
+                null;
+    }
 
-	/**
-	 * has
-	 *
-	 * @access	public
-	 * @param	String
-	 * @return	Boolean
-	 */
+    /**
+     * Implements of Iterator.
+     */
+    public function current()
+    {
+        return current($this->collections);
+    }
 
-	public function has($pattern) {
-		return array_key_exists($pattern, $this->collections);
-	}
+    /**
+     * Implements of Iterator.
+     */
+    public function key()
+    {
+        return key($this->collections);
+    }
 
-	/**
-	 * fetch
-	 *
-	 * @access	public
-	 * @param	String
-	 * @return	String|Object|NULL
-	 */
+    /**
+     * Implements of Iterator.
+     */
+    public function next()
+    {
+        next($this->collections);
+    }
 
-	public function fetch($pattern) {
-		return $this->has($pattern) ?
-			$this->collections[$pattern] :
-				null;
-	}
+    /**
+     * Implements of Iterator.
+     */
+    public function rewind()
+    {
+        reset($this->collections);
+    }
 
-	/**
-	 * Implements of Iterator
-	 */
-
-	public function current() {
-		return current($this->collections);
-	}
-
-	/**
-	 * Implements of Iterator
-	 */
-
-	public function key() {
-		return key($this->collections);
-	}
-
-	/**
-	 * Implements of Iterator
-	 */
-
-	public function next() {
-		next($this->collections);
-	}
-
-	/**
-	 * Implements of Iterator
-	 */
-
-	public function rewind() {
-		reset($this->collections);
-	}
-
-	/**
-	 * Implements of Iterator
-	 */
-
-	public function valid() {
-		return null !== $this->key();
-	}
-
+    /**
+     * Implements of Iterator.
+     */
+    public function valid()
+    {
+        return null !== $this->key();
+    }
 }

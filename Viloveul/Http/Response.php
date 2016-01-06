@@ -1,174 +1,160 @@
-<?php namespace Viloveul\Http;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Http
+namespace Viloveul\Http;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Http
  */
 
 use Viloveul\Core\Configure;
 use Viloveul\Core\View;
 
-class Response {
+class Response
+{
+    protected $output = '';
 
-	protected $output = '';
+    protected $contentType = 'text/html';
 
-	protected $contentType = 'text/html';
+    protected $headers = array();
 
-	protected $headers = array();
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+    }
 
-	/**
-	 * Constructor
-	 * 
-	 * @access	public
-	 * @return	void
-	 */
+    /**
+     * clear.
+     */
+    public function clear()
+    {
+        $this->output = '';
+        $this->contentType = 'text/html';
+        $this->headers = array();
 
-	public function __construct() {
-	}
+        if ($lvl = ob_get_level()) {
+            for ($i = $lvl; $i > 0; --$i) {
+                ob_flush();
+            }
+        }
 
-	/**
-	 * clear
-	 * 
-	 * @access	public
-	 * @return	void
-	 */
+        return $this;
+    }
 
-	public function clear() {
-		$this->output = '';
-		$this->contentType = 'text/html';
-		$this->headers = array();
+    /**
+     * header.
+     *
+     * @param   string header
+     * @param   bool
+     */
+    public function httpHeader($header, $overwrite = true)
+    {
+        $this->headers[] = array($header, $overwrite);
 
-		if ($lvl = ob_get_level()) {
-			for ($i = $lvl; $i > 0; $i--) {
-				ob_flush();
-			}
-		}
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * setContentType.
+     *
+     * @param   string content_type
+     */
+    public function setContentType($contentType)
+    {
+        $this->contentType = $contentType;
 
-	/**
-	 * header
-	 * 
-	 * @access	public
-	 * @param	String header
-	 * @param	Boolean
-	 * @return	void
-	 */
+        return $this;
+    }
 
-	public function httpHeader($header, $overwrite = true) {
-		$this->headers[] = array($header, $overwrite);
-		return $this;
-	}
+    /**
+     * getContentType.
+     *
+     * @return string content_type
+     */
+    public function getContentType()
+    {
+        return $this->contentType;
+    }
 
-	/**
-	 * setContentType
-	 * 
-	 * @access	public
-	 * @param	String content_type
-	 * @return	void
-	 */
+    /**
+     * setOutput.
+     *
+     * @param   string data
+     * @param   bool
+     */
+    public function setOutput($data, $apppend = false)
+    {
+        $output = ($data instanceof View) ? $data->render() : ((string) $data);
 
-	public function setContentType($contentType) {
-		$this->contentType = $contentType;
-		return $this;
-	}
+        $this->output = (true === $apppend) ?
+            ($this->output.$output) :
+                $output;
 
-	/**
-	 * getContentType
-	 * 
-	 * @access	public
-	 * @return	String content_type
-	 */
+        return $this;
+    }
 
-	public function getContentType() {
-		return $this->contentType;
-	}
+    /**
+     * getOutput.
+     *
+     * @return string output
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
 
-	/**
-	 * setOutput
-	 * 
-	 * @access	public
-	 * @param	String data
-	 * @param	Boolean
-	 * @return	void
-	 */
+    /**
+     * send.
+     *
+     * @param   string output if any
+     */
+    public function send($data = null)
+    {
+        is_null($data) or $this->setOutput($data, true);
 
-	public function setOutput($data, $apppend = false) {
-		$output = ($data instanceof View) ? $data->render() : ((string) $data);
+        if (!headers_sent()) {
+            $headers = array_map(
+                'unserialize',
+                array_unique(
+                    array_map('serialize', $this->headers)
+                )
+            );
 
-		$this->output = (true === $apppend) ?
-			($this->output.$output) :
-				$output;
+            foreach ($headers as $header) {
+                header($header[0], $header[1]);
+            }
 
-		return $this;
-	}
+            @header('Content-Type: '.$this->contentType, true);
+        }
 
-	/**
-	 * getOutput
-	 * 
-	 * @access	public
-	 * @return	String output
-	 */
+        $output = $this->getOutput();
 
-	public function getOutput() {
-		return $this->output;
-	}
+        $this->clear();
 
-	/**
-	 * send
-	 * 
-	 * @access	public
-	 * @param	String output if any
-	 * @return	void
-	 */
+        echo $output;
+    }
 
-	public function send($data = null) {
-		is_null($data) or $this->setOutput($data, true);
+    /**
+     * redirect.
+     *
+     * @param   string dynamic/static url
+     *
+     * @return string fixed url
+     */
+    public static function redirect($target)
+    {
+        $url = !preg_match('#^\w+\:\/\/#', $target) ?
+            Configure::siteurl($target) :
+                $target;
 
-		if (! headers_sent()) {
+        if (!headers_sent()) {
+            header("Location: {$url}");
+            exit();
+        }
 
-			$headers = array_map(
-				'unserialize',
-				array_unique(
-					array_map('serialize', $this->headers)
-				)
-			);
-
-			foreach ($headers as $header) {
-				header($header[0], $header[1]);
-			}
-
-			@header('Content-Type: ' . $this->contentType, true);
-		}
-
-		$output = $this->getOutput();
-
-		$this->clear();
-
-		print $output;
-	}
-
-	/**
-	 * redirect
-	 * 
-	 * @access	public
-	 * @param	String dynamic/static url
-	 * @return	String fixed url
-	 */
-
-	public static function redirect($target) {
-		$url = !preg_match('#^\w+\:\/\/#', $target) ?
-			Configure::siteurl($target) :
-				$target;
-
-		if (! headers_sent()) {
-			header("Location: {$url}");
-			exit();
-		}
-
-		printf('<script type="text/javascript">window.location.href = "%s";</script>', $url);
-	}
-
+        printf('<script type="text/javascript">window.location.href = "%s";</script>', $url);
+    }
 }

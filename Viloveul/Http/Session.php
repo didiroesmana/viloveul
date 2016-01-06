@@ -1,263 +1,255 @@
-<?php namespace Viloveul\Http;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Http
+namespace Viloveul\Http;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Http
  */
 
 use ArrayAccess;
 
-class Session implements ArrayAccess {
+class Session implements ArrayAccess
+{
+    protected $sessionName = 'zafex';
 
-	protected $sessionName = 'zafex';
+    protected $flashvars = array();
 
-	protected $flashvars = array();
+    /**
+     * Constructor.
+     */
+    public function __construct($sessionName)
+    {
+        $defaultOptions = array(
+            'name' => null,
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => null,
+            'secure' => true,
+            'httponly' => false,
+        );
 
-	/**
-	 * Constructor
-	 */
+        if (is_string($sessionName)) {
+            $this->options = array_merge($defaultOptions, array('name' => $sessionName));
+        } else {
+            $this->options = array_merge($defaultOptions, (array) $sessionName);
+        }
 
-	public function __construct($sessionName) {
-		$defaultOptions = array(
-			'name' => null,
-			'lifetime' => 0,
-			'path' => '/',
-			'domain' => null,
-			'secure' => true,
-			'httponly' => false
-		);
+        if (empty($this->options['name'])) {
+            $this->options['name'] = 'zafex';
+        }
 
-		if (is_string($sessionName)) {
-			$this->options = array_merge($defaultOptions, array('name' => $sessionName));
-		} else {
-			$this->options = array_merge($defaultOptions, (array) $sessionName);
-		}
+        $this->sessionName = $sessionName;
 
-		if (empty($this->options['name'])) {
-			$this->options['name'] = 'zafex';
-		}
+        register_shutdown_function('session_write_close');
 
-		$this->sessionName = $sessionName;
+        if (session_id() === '') {
+            session_name($this->sessionName);
+            session_start();
+        }
 
-		register_shutdown_function('session_write_close');
+        if (!isset($_SESSION['__vars'])) {
+            $_SESSION['__vars'] = array();
+        } elseif (!is_array($_SESSION['__vars'])) {
+            unset($_SESSION['__vars']);
+            $_SESSION['__vars'] = array();
+        }
 
-		if (session_id() === '') {
-			session_name($this->sessionName);
-			session_start();
-		}
+        if (isset($_SESSION['__flashdata'])) {
+            $this->flashvars = (array) $_SESSION['__flashdata'];
+            unset($_SESSION['__flashdata']);
+        }
+    }
 
-		if (! isset($_SESSION['__vars'])) {
-			$_SESSION['__vars'] = array();
+    /**
+     * all.
+     *
+     * @return array
+     */
+    public function &all()
+    {
+        return $_SESSION['__vars'];
+    }
 
-		} elseif (! is_array($_SESSION['__vars'])) {
-			unset($_SESSION['__vars']);
-			$_SESSION['__vars'] = array();
-		}
+    /**
+     * set
+     * implement of ArrayAccess.
+     *
+     * @param   string name
+     * @param   value
+     */
+    public function offsetSet($name, $value)
+    {
+        if (!is_null($name)) {
+            $this->set(array($name => $value));
+        }
+    }
 
-		if (isset($_SESSION['__flashdata'])) {
-			$this->flashvars = (array) $_SESSION['__flashdata'];
-			unset($_SESSION['__flashdata']);
-		}
-	}
+    /**
+     * get
+     * implement of ArrayAccess.
+     *
+     * @param   string name
+     *
+     * @return Any
+     */
+    public function offsetGet($name)
+    {
+        return $this->get($name, null);
+    }
 
-	/**
-	 * all
-	 * 
-	 * @access	public
-	 * @return	Array
-	 */
+    /**
+     * unset
+     * implement of ArrayAccess.
+     *
+     * @param   string name
+     */
+    public function offsetUnset($name)
+    {
+        return $this->delete($name);
+    }
 
-	public function &all() {
-		return $_SESSION['__vars'];
-	}
+    /**
+     * exists
+     * implement of ArrayAccess.
+     *
+     * @param   string name
+     *
+     * @return bool
+     */
+    public function offsetExists($name)
+    {
+        return $this->has($name);
+    }
 
+    /**
+     * set.
+     *
+     * @param   string name
+     * @param   value
+     */
+    public function set($data, $value = null)
+    {
+        if (is_string($data)) {
+            return $this->set(array($data => $value));
+        }
 
-	/**
-	 * set
-	 * implement of ArrayAccess
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	value
-	 */
+        foreach ((array) $data as $key => $val) {
+            $_SESSION['__vars'][$key] = $val;
+        }
 
-	public function offsetSet($name, $value) {
-		if (! is_null($name)) {
-			$this->set(array($name => $value));
-		}
-	}
+        return $this;
+    }
 
-	/**
-	 * get
-	 * implement of ArrayAccess
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @return	Any
-	 */
+    /**
+     * get.
+     *
+     * @param   string name
+     * @param   Any default value
+     *
+     * @return Any
+     */
+    public function get($name, $default = null)
+    {
+        return $this->has($name) ?
+            $_SESSION['__vars'][$name] :
+                $default;
+    }
 
-	public function offsetGet($name) {
-		return $this->get($name, null);
-	}
+    /**
+     * delete.
+     *
+     * @param   string name
+     */
+    public function delete($name)
+    {
+        if ($this->has($name)) {
+            unset($_SESSION['__vars'][$name]);
+        }
+    }
 
-	/**
-	 * unset
-	 * implement of ArrayAccess
-	 * 
-	 * @access	public
-	 * @param	String name
-	 */
+    /**
+     * has.
+     *
+     * @param   string name
+     *
+     * @return bool
+     */
+    public function has($name)
+    {
+        return array_key_exists($name, $_SESSION['__vars']);
+    }
 
-	public function offsetUnset($name) {
-		return $this->delete($name);
-	}
+    /**
+     * destroy.
+     */
+    public function destroy()
+    {
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params['path'],
+                $params['domain'],
+                $params['secure'],
+                $params['httponly']
+            );
+        }
+        $_SESSION = array();
+        session_unset();
+        session_destroy();
+    }
 
-	/**
-	 * exists
-	 * implement of ArrayAccess
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @return	Boolean
-	 */
+    /**
+     * createFlashdata.
+     *
+     * @param   string key
+     * @param   any
+     */
+    public function createFlashdata($data, $value = null)
+    {
+        if (is_string($data)) {
+            return $this->createFlashdata(array($data => $value));
+        }
 
-	public function offsetExists($name) {
-		return $this->has($name);
-	}
+        foreach ((array) $data as $key => $val) {
+            $_SESSION['__flashdata'][$key] = $val;
+        }
 
-	/**
-	 * set
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	value
-	 */
+        return $this;
+    }
 
-	public function set($data, $value = null) {
-		if (is_string($data)) {
-			return $this->set(array($data => $value));
-		}
+    /**
+     * readFlashdata.
+     *
+     * @param   string key
+     * @param   any
+     *
+     * @return any
+     */
+    public function readFlashdata($key, $default = null)
+    {
+        return array_key_exists($key, $this->flashvars) ?
+            $this->flashvars[$key] :
+                $default;
+    }
 
-		foreach ((array) $data as $key => $val) {
-			$_SESSION['__vars'][$key] = $val;
-		}
+    /**
+     * keepFlashdata.
+     *
+     * @param   string key
+     *
+     * @return boid
+     */
+    public function keepFlashdata($key)
+    {
+        if (array_key_exists($key, $this->flashvars)) {
+            $_SESSION['__flashdata'][$key] = $this->flashvars[$key];
+        }
 
-		return $this;
-	}
-
-	/**
-	 * get
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @param	Any default value
-	 * @return	Any
-	 */
-
-	public function get($name, $default = null) {
-		return $this->has($name) ?
-			$_SESSION['__vars'][$name] :
-				$default;
-	}
-
-	/**
-	 * delete
-	 * 
-	 * @access	public
-	 * @param	String name
-	 */
-
-	public function delete($name) {
-		if ($this->has($name)) {
-			unset($_SESSION['__vars'][$name]);
-		}
-	}
-
-	/**
-	 * has
-	 * 
-	 * @access	public
-	 * @param	String name
-	 * @return	Boolean
-	 */
-
-	public function has($name) {
-		return array_key_exists($name, $_SESSION['__vars']);
-	}
-
-	/**
-	 * destroy
-	 * 
-	 * @access	public
-	 */
-
-	public function destroy() {
-		if (ini_get("session.use_cookies")) {
-			$params = session_get_cookie_params();
-			setcookie(
-				session_name(),
-				'',
-				time() - 42000,
-				$params["path"],
-				$params["domain"],
-				$params["secure"],
-				$params["httponly"]
-			);
-		}
-		$_SESSION = array();
-		session_unset();
-		session_destroy();
-	}
-
-	/**
-	 * createFlashdata
-	 * 
-	 * @access	public
-	 * @param	String key
-	 * @param	any
-	 * @return	void
-	 */
-
-	public function createFlashdata($data, $value = null) {
-		if (is_string($data)) {
-			return $this->createFlashdata(array($data => $value));
-		}
-
-		foreach ((array) $data as $key => $val) {
-			$_SESSION['__flashdata'][$key] = $val;
-		}
-		return $this;
-	}
-
-	/**
-	 * readFlashdata
-	 * 
-	 * @access	public
-	 * @param	String key
-	 * @param	any
-	 * @return	any
-	 */
-
-	public function readFlashdata($key, $default = null) {
-		return array_key_exists($key, $this->flashvars) ?
-			$this->flashvars[$key] :
-				$default;
-	}
-
-	/**
-	 * keepFlashdata
-	 * 
-	 * @access	public
-	 * @param	String key
-	 * @return	boid
-	 */
-
-	public function keepFlashdata($key) {
-		if (array_key_exists($key, $this->flashvars)) {
-			$_SESSION['__flashdata'][$key] = $this->flashvars[$key];
-		}
-		return $this;
-	}
-
+        return $this;
+    }
 }

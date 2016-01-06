@@ -1,135 +1,124 @@
-<?php namespace Viloveul\Core;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Core
+namespace Viloveul\Core;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Core
  */
 
 use Exception;
 
-class Debugger {
+class Debugger
+{
+    /**
+     * printMessage.
+     *
+     * @param   string content message
+     * @param   array backtrace
+     * @param   bool
+     */
+    public static function printMessage($content, array $backtrace = array(), $exit = true)
+    {
+        $output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
+        $output .= $content;
+        if ($backtrace) {
+            $output .= self::calculateBacktrace($backtrace);
+        }
+        $output .= '</div>';
 
-	/**
-	 * printMessage
-	 * 
-	 * @access	public
-	 * @param	String content message
-	 * @param	Array backtrace
-	 * @param	Boolean
-	 * @return	void
-	 */
+        if (ob_get_level() > 0) {
+            ob_end_flush();
+        }
 
-	public static function printMessage($content, array $backtrace = array(), $exit = true) {
-		$output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
-		$output .= $content;
-		if ($backtrace) {
-			$output .= self::calculateBacktrace($backtrace);
-		}
-		$output .= '</div>';
+        echo $output;
 
-		if (ob_get_level() > 0) {
-			ob_end_flush();
-		}
+        empty($exit) or exit(1);
+    }
 
-		print $output;
+    /**
+     * calculateBacktrace.
+     *
+     * @param   array backtrace
+     *
+     * @return string
+     */
+    public static function calculateBacktrace(array $backtrace)
+    {
+        $output = '';
 
-		empty($exit) or exit(1);
-	}
+        foreach ($backtrace as $error) :
+            if (isset($error['file'])) {
+                $output .= '<p style="padding-left: 10px; border-left: 2px dashed #CCCCCC">';
+                $output .= sprintf('%s -> %s : %d', $error['function'], $error['file'], $error['line']);
+                $output .= '</p>';
+            }
+        endforeach;
 
-	/**
-	 * calculateBacktrace
-	 * 
-	 * @access	public
-	 * @param	Array backtrace
-	 * @return	String
-	 */
+        return $output ? sprintf('<div style="margin-left: 15px;">Backtrace : %s</div>', $output) : '';
+    }
 
-	public static function calculateBacktrace(array $backtrace) {
-		$output = '';
+    /**
+     * handleError.
+     *
+     * @param   string severity message
+     * @param   string data message
+     * @param   string filename
+     * @param   int line number
+     */
+    public static function handleError($severity, $message, $file, $line)
+    {
+        $data = '<h4>A PHP Error was encountered</h4>';
 
-		foreach ($backtrace as $error) :
-			if (isset($error['file'])) {
-				$output .= '<p style="padding-left: 10px; border-left: 2px dashed #CCCCCC">';
-				$output .= sprintf('%s -> %s : %d', $error['function'], $error['file'], $error['line']);
-				$output .= '</p>';
-			}
-		endforeach;
+        $reallyError = (((E_ERROR | E_COMPILE_ERROR | E_CORE_ERROR | E_USER_ERROR) & $severity) === $severity);
 
-		return $output ? sprintf('<div style="margin-left: 15px;">Backtrace : %s</div>', $output) : '';
-	}
+        if (($severity & error_reporting()) !== $severity) {
+            return;
+        }
 
-	/**
-	 * handleError
-	 * 
-	 * @access	public
-	 * @param	String severity message
-	 * @param	String data message
-	 * @param	String filename
-	 * @param	Int line number
-	 * @return	void
-	 */
+        $data .= sprintf('<p>Severity : %s</p>', $severity);
+        $data .= sprintf('<p>Message : %s</p>', $message);
+        $data .= sprintf('<p>Filename : %s</p>', $file);
+        $data .= sprintf('<p>Line Number : %s</p>', $line);
 
-	public static function handleError($severity, $message, $file, $line) {
-		$data = '<h4>A PHP Error was encountered</h4>';
+        self::printMessage($data, debug_backtrace(), (boolean) $reallyError);
 
-		$reallyError = (((E_ERROR | E_COMPILE_ERROR | E_CORE_ERROR | E_USER_ERROR) & $severity) === $severity);
+        return true;
+    }
 
-		if (($severity & error_reporting()) !== $severity) {
-			return;
-		}
+    /**
+     * handleException.
+     *
+     * @param   object Exception
+     */
+    public static function handleException(Exception $e)
+    {
+        $data = '<h4>An uncaught Exception was encountered</h4>';
 
-		$data .= sprintf('<p>Severity : %s</p>', $severity);
-		$data .= sprintf('<p>Message : %s</p>', $message);
-		$data .= sprintf('<p>Filename : %s</p>', $file);
-		$data .= sprintf('<p>Line Number : %s</p>', $line);
+        $data .= sprintf('<p>Type : %s</p>', get_class($e));
+        $data .= sprintf('<p>Message : %s</p>', $e->getMessage());
+        $data .= sprintf('<p>Filename : %s</p>', $e->getFile());
+        $data .= sprintf('<p>Line Number : %s</p>', $e->getLine());
 
-		self::printMessage($data, debug_backtrace(), (boolean) $reallyError);
+        self::printMessage($data, $e->getTrace(), true);
 
-		return true;
-	}
+        return true;
+    }
 
-	/**
-	 * handleException
-	 * 
-	 * @access	public
-	 * @param	Object Exception
-	 * @return	void
-	 */
+    /**
+     * registerErrorHandler.
+     */
+    public static function registerErrorHandler()
+    {
+        set_error_handler(array(__CLASS__, 'handleError'), E_ALL);
+    }
 
-	public static function handleException(Exception $e) {
-		$data = '<h4>An uncaught Exception was encountered</h4>';
-
-		$data .= sprintf('<p>Type : %s</p>', get_class($e));
-		$data .= sprintf('<p>Message : %s</p>', $e->getMessage());
-		$data .= sprintf('<p>Filename : %s</p>', $e->getFile());
-		$data .= sprintf('<p>Line Number : %s</p>', $e->getLine());
-
-		self::printMessage($data, $e->getTrace(), true);
-
-		return true;
-	}
-
-	/**
-	 * registerErrorHandler
-	 * 
-	 * @access	public
-	 * @return	void
-	 */
-
-	public static function registerErrorHandler() {
-		set_error_handler(array(__CLASS__, 'handleError'), E_ALL);
-	}
-
-	/**
-	 * registerExceptionHandler
-	 * 
-	 * @access	public
-	 * @return	void
-	 */
-
-	public static function registerExceptionHandler() {
-		set_exception_handler(array(__CLASS__, 'handleException'));
-	}
-
+    /**
+     * registerExceptionHandler.
+     */
+    public static function registerExceptionHandler()
+    {
+        set_exception_handler(array(__CLASS__, 'handleException'));
+    }
 }
