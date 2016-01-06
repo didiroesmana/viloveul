@@ -1,123 +1,121 @@
-<?php namespace Viloveul\Utility;
+<?php
 
-/**
- * @author		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Utility
+namespace Viloveul\Utility;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Utility
  */
 
-use Viloveul\Core\Configure;
 use Viloveul\Core\Object;
 use Viloveul\Http\Request;
+use Viloveul\Core\Configure;
 
-class Anchor extends Object {
+class Anchor extends Object
+{
+    protected $src = '#';
 
-	protected $src = '#';
+    protected $text = '';
 
-	protected $text = '';
+    protected $title = '';
 
-	protected $title = '';
+    protected $autoActive = false;
 
-	protected $autoActive = false;
+    protected $htmlAttribute;
 
-	protected $htmlAttribute;
+    /**
+     * Constructor.
+     */
+    public function __construct($src, $text = null, $param = null)
+    {
+        $this->htmlAttribute = new HtmlAttribute();
 
-	/**
-	 * Constructor
-	 */
+        $this->src = $src;
+        $this->text = $text;
 
-	public function __construct($src, $text = null, $param = null) {
-		$this->htmlAttribute = new HtmlAttribute();
+        if (is_array($param)) {
+            $this->addAttr($param);
+        } else {
+            $this->title = $param;
+        }
+    }
 
-		$this->src = $src;
-		$this->text = $text;
+    /**
+     * To String.
+     */
+    public function __toString()
+    {
+        return $this->show();
+    }
 
-		if (is_array($param)) {
-			$this->addAttr($param);
-		} else {
-			$this->title = $param;
-		}
-	}
+    /**
+     * Call.
+     *
+     * @param   string method name
+     * @param   array arguments
+     */
+    public function __call($method, $params)
+    {
+        if (method_exists($this->htmlAttribute, $method)) {
+            call_user_func_array(array(&$this->htmlAttribute, $method), $params);
+        }
 
-	/**
-	 * To String
-	 */
+        return $this;
+    }
 
-	public function __toString() {
-		return $this->show();
-	}
+    /**
+     * show.
+     *
+     * @return string anchor element
+     */
+    public function show()
+    {
+        if ($this->src == '#') {
+            $src = '#';
+        } else {
+            $src = !preg_match('#^\w+\:\/\/#', $this->src) ?
+                Configure::siteurl($this->src) :
+                    $this->src;
+        }
 
-	/**
-	 * Call
-	 * 
-	 * @access	public
-	 * @param	String method name
-	 * @param	Array arguments
-	 * @return	void
-	 */
+        $text = empty($this->text) ? $src : $this->text;
+        $title = empty($this->title) ? $text : $this->title;
 
-	public function __call($method, $params) {
-		if (method_exists($this->htmlAttribute, $method)) {
-			call_user_func_array(array(&$this->htmlAttribute, $method), $params);
-		}
-		return $this;
-	}
+        if ($this->autoActive === true) {
+            if ($href == Request::currenturl()) {
+                $this->addAttr('class', 'active');
+            }
+        }
 
-	/**
-	 * show
-	 * 
-	 * @access	public
-	 * @return	String anchor element
-	 */
+        $this->addAttr('title', $title)->addAttr('href', $src);
 
-	public function show() {
-		if ($this->src == '#') {
-			$src = '#';
-		} else {
-			$src = !preg_match('#^\w+\:\/\/#', $this->src) ?
-				Configure::siteurl($this->src) :
-					$this->src;
-		}
+        return "<a{$this->htmlAttribute}>{$text}</a>";
+    }
 
-		$text = empty($this->text) ? $src : $this->text;
-		$title = empty($this->title) ? $text : $this->title;
+    /**
+     * autoActiveClass.
+     *
+     * @param   bool
+     */
+    public function autoActiveClass($value)
+    {
+        if (is_boolean($value)) {
+            $this->autoActive = $value;
+        }
 
-		if ($this->autoActive === true) {
-			if ($href == Request::currenturl()) {
-				$this->addAttr('class', 'active');
-			}
-		}
+        return $this;
+    }
 
-		$this->addAttr('title', $title)->addAttr('href', $src);
-
-		return "<a{$this->htmlAttribute}>{$text}</a>";
-	}
-
-	/**
-	 * autoActiveClass
-	 * 
-	 * @access	public
-	 * @param	Boolean
-	 * @return	void
-	 */
-
-	public function autoActiveClass($value) {
-		if (is_boolean($value)) {
-			$this->autoActive = $value;
-		}
-		return $this;
-	}
-
-	/**
-	 * create
-	 * 
-	 * @access	public
-	 * @param	String href
-	 * @return	Object class
-	 */
-
-	public static function create($src, $text = null, $param = null) {
-		return self::createInstance($src, $text, $param);
-	}
-
+    /**
+     * create.
+     *
+     * @param   string href
+     *
+     * @return object class
+     */
+    public static function create($src, $text = null, $param = null)
+    {
+        return self::createInstance($src, $text, $param);
+    }
 }

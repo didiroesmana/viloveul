@@ -1,65 +1,62 @@
-<?php namespace Viloveul\Core;
+<?php
 
-/**
- * @author 		Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package		Viloveul
- * @subpackage	Core
+namespace Viloveul\Core;
+
+/*
+ * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @package     Viloveul
+ * @subpackage  Core
  */
 
 use ReflectionClass;
-use ReflectionException;
-use Exception;
 
-abstract class Object {
+abstract class Object
+{
+    /**
+     * classname.
+     *
+     * @return string called classname
+     */
+    final public static function classname()
+    {
+        return get_called_class();
+    }
 
-	/**
-	 * classname
-	 * 
-	 * @access	public
-	 * @return	String called classname
-	 */
+    /**
+     * availableMethods.
+     *
+     * @return array method lists
+     */
+    final public static function availableMethods()
+    {
+        return get_class_methods(self::classname());
+    }
 
-	final public static function classname() {
-		return get_called_class();
-	}
+    /**
+     * hasMethod.
+     *
+     * @param   string method name
+     *
+     * @return bool
+     */
+    final public static function hasMethod($methodname)
+    {
+        return in_array($methodname, self::availableMethods(), true);
+    }
 
-	/**
-	 * availableMethods
-	 * 
-	 * @access	public
-	 * @return	Array method lists
-	 */
+    /**
+     * createInstance.
+     *
+     * @param   [mixed]
+     *
+     * @return object
+     */
+    final public static function createInstance($param = null)
+    {
+        $reflectionClass = new ReflectionClass(self::classname());
 
-	final public static function availableMethods() {
-		return get_class_methods(self::classname());
-	}
-
-	/**
-	 * hasMethod
-	 * 
-	 * @access	public
-	 * @param	String method name
-	 * @return	Boolean
-	 */
-
-	final public static function hasMethod($methodname) {
-		return in_array($methodname, self::availableMethods(), true);
-	}
-
-	/**
-	 * createInstance
-	 * 
-	 * @access	public
-	 * @param	[mixed]
-	 * @return	Object
-	 */
-
-	final public static function createInstance($param = null) {
-		$reflectionClass = new ReflectionClass(self::classname());
-
-		return is_null($param) ?
-			$reflectionClass->newInstance() :
-				$reflectionClass->newInstanceArgs(func_get_args());
-	}
-
+        return is_null($param) ?
+            $reflectionClass->newInstance() :
+                $reflectionClass->newInstanceArgs(func_get_args());
+    }
 }
