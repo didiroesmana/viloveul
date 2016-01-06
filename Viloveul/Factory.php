@@ -50,7 +50,7 @@ class Factory
      *
      * @return object Viloveul\Core\Application
      */
-    public static function serve($path)
+    public static function serve($path, $configs = array())
     {
         $realpath = realpath($path);
 
@@ -61,10 +61,7 @@ class Factory
         $realpath = rtrim(str_replace('\\', '/', $realpath), '/');
         $basepath = rtrim(str_replace('\\', '/', realpath(($_SERVER['SCRIPT_FILENAME']))), '/');
 
-        if (is_file($realpath.'/configs.php')) {
-            $configs = include $realpath.'/configs.php';
-            is_array($configs) and Core\Configure::write($configs);
-        }
+        is_array($configs) and Core\Configure::write($configs);
 
         Core\Debugger::registerErrorHandler();
         Core\Debugger::registerExceptionHandler();
