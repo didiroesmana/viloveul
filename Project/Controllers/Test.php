@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\SampleModel;
 use Viloveul\Core\Controller;
 
 class Test extends Controller
@@ -18,6 +19,7 @@ class Test extends Controller
 
 	public function __invoke()
 	{
-		return __METHOD__;
+		$model = SampleModel::forge()->some();
+		print_r($model);
 	}
 }

@@ -42,14 +42,14 @@ abstract class Model extends Object
 
         if (false === $param) {
             return parent::createInstance();
-        } elseif ($param instanceof $class) {
-            self::$modelCollections[$class] = $param;
+        } elseif ($param instanceof $classname) {
+            self::$modelCollections[$classname] = $param;
         }
 
-        if (!isset(self::$modelCollections[$class])) {
-            self::$modelCollections[$class] = parent::createInstance($param);
+        if (!isset(self::$modelCollections[$classname])) {
+            self::$modelCollections[$classname] = parent::createInstance($param);
         }
 
-        return self::$modelCollections[$class];
+        return self::$modelCollections[$classname];
     }
 }
