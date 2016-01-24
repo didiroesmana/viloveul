@@ -9,24 +9,61 @@ namespace Viloveul\Core;
  */
 
 use Exception;
+use ArrayAccess;
 use Viloveul\Database\IConnection;
 
-abstract class Model extends Object
+abstract class Model extends Object implements ArrayAccess
 {
     private static $modelCollections = array();
 
     protected $db;
 
+    protected $classWrapper;
+
+    private $dataFields = array();
+
     /**
      * Constructor.
      */
-    public function __construct($connection = null)
+    public function __construct($class = __CLASS__)
     {
-        if (strpos(parent::classname(), 'Model') === false) {
-            throw new Exception(sprintf('the <i>name</i> of class "%s" must following with "Model"', parent::classname()));
-        }
+        $this->db = $this->dbConnection();
+        $this->classWrapper = $class ? $class : __CLASS__;
 
-        $this->db = ($connection instanceof IConnection) ? $connection : (Connector::getConnection());
+        if (!isset(self::$modelCollections[__CLASS__])) {
+            self::$modelCollections[__CLASS__] = $this;
+        }
+    }
+
+    public function dbConnection()
+    {
+        return Connector::getConnection();
+    }
+
+    public function offsetExists($name)
+    {
+        return array_key_exists($name, $this->dataFields) ? true : false;
+    }
+
+    public function offsetUnset($name)
+    {
+        if ($this->offsetExists($name)) {
+            unset($this->dataFields[$name]);
+        }
+    }
+
+    public function offsetGet($name)
+    {
+        return $this->offsetExists($name) ?
+            $this->dataFields[$name] :
+                null;
+    }
+
+    public function offsetSet($name, $value)
+    {
+        if (!is_null($name)) {
+            $this->dataFields[$name] = $value;
+        }
     }
 
     /**
@@ -38,16 +75,16 @@ abstract class Model extends Object
      */
     public static function forge($param = true)
     {
-        $classname = __CLASS__;
-
         if (false === $param) {
             return parent::createInstance();
-        } elseif ($param instanceof $classname) {
-            self::$modelCollections[$classname] = $param;
         }
 
-        if (!isset(self::$modelCollections[$classname])) {
-            self::$modelCollections[$classname] = parent::createInstance($param);
+        $classname = __CLASS__;
+
+        if ($param instanceof $classname) {
+            self::$modelCollections[$classname] = $param;
+        } elseif (!isset(self::$modelCollections[$classname])) {
+            parent::createInstance($param);
         }
 
         return self::$modelCollections[$classname];

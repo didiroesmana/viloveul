@@ -12,14 +12,14 @@ class Factory
     /**
      * Constructor.
      */
-    public function __construct()
+    final private function __construct()
     {
     }
 
     /**
      * registerSystemAutoloader.
      */
-    public static function registerSystemAutoloader()
+    public static function useSystemAutoloader()
     {
         spl_autoload_register(array(__CLASS__, 'systemAutoloader'), true, true);
     }
@@ -50,7 +50,7 @@ class Factory
      *
      * @return object Viloveul\Core\Application
      */
-    public static function serve($path, $configs = array())
+    public static function serve($path, $config = null)
     {
         $realpath = realpath($path);
 
@@ -61,7 +61,15 @@ class Factory
         $realpath = rtrim(str_replace('\\', '/', $realpath), '/');
         $basepath = rtrim(str_replace('\\', '/', realpath(($_SERVER['SCRIPT_FILENAME']))), '/');
 
-        is_array($configs) and Core\Configure::write($configs);
+        $uses = is_array($config) ? $config : (array) $config;
+
+        array_walk($uses, function($v){
+            $configs = $v;
+            if (is_file($v)) {
+                $configs = include $v;
+            }
+            empty($configs) or Core\Configure::write($configs);
+        });
 
         Core\Debugger::registerErrorHandler();
         Core\Debugger::registerExceptionHandler();
