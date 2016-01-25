@@ -42,9 +42,7 @@ abstract class Controller extends Object
      */
     public function __get($name)
     {
-        $app = &Application::currentInstance();
-
-        return $app[$name];
+        return Application::currentInstance()->make($name);
     }
 
     /**
@@ -57,8 +55,7 @@ abstract class Controller extends Object
      */
     public static function fire($requestSegment, $print = true)
     {
-        $request = preg_split('/\//', $requestSegment, -1, PREG_SPLIT_NO_EMPTY);
-        $method = 'action'.str_replace(' ', '', ucwords(str_replace('-', ' ', $request)));
+        $method = static::createActionName($requestSegment);
 
         if (!self::hasMethod($method)) {
             return false;
@@ -86,5 +83,17 @@ abstract class Controller extends Object
         } catch (ReflectionException $e) {
             Debugger::handleException($e);
         }
+    }
+
+    /**
+     * createActionName
+     *
+     * @param   string
+     * @return  string
+     */
+    protected static function createActionName($string)
+    {
+        $req = preg_split('/\//', $string, -1, PREG_SPLIT_NO_EMPTY);
+        return 'action'.str_replace(' ', '', ucwords(str_replace('-', ' ', $req)));
     }
 }

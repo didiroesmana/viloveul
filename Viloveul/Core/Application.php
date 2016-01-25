@@ -41,7 +41,7 @@ class Application implements ArrayAccess
     {
         is_null(self::$instance) or die('application has been initialized');
 
-        self::$instance = &$this;
+        self::$instance = $this;
 
         $this->collections['input'] = $this->share(function ($c) {
             return new Http\Input();
@@ -371,7 +371,7 @@ class Application implements ArrayAccess
      *
      * @return object application
      */
-    public static function &currentInstance()
+    public static function currentInstance()
     {
         return self::$instance;
     }
