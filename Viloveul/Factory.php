@@ -65,6 +65,7 @@ class Factory
 
         array_walk($uses, function($v){
             $configs = $v;
+
             if (is_file($v)) {
                 $configs = include $v;
             }

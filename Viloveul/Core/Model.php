@@ -35,16 +35,33 @@ abstract class Model extends Object implements ArrayAccess
         }
     }
 
+    /**
+     * dbConnection
+     *
+     * @return  object
+     */
     public function dbConnection()
     {
         return Connector::getConnection();
     }
 
+    /**
+     * offsetExistss
+     *
+     * @param   string
+     * @return  Boolean
+     */
     public function offsetExists($name)
     {
         return array_key_exists($name, $this->dataFields) ? true : false;
     }
 
+    /**
+     * offsetUnset
+     *
+     * @param   string
+     * @return  void
+     */
     public function offsetUnset($name)
     {
         if ($this->offsetExists($name)) {
@@ -52,6 +69,12 @@ abstract class Model extends Object implements ArrayAccess
         }
     }
 
+    /**
+     * offsetGet
+     *
+     * @param   string
+     * @return  mixed
+     */
     public function offsetGet($name)
     {
         return $this->offsetExists($name) ?
@@ -59,6 +82,13 @@ abstract class Model extends Object implements ArrayAccess
                 null;
     }
 
+    /**
+     * offsetSet
+     *
+     * @param   string
+     * @param   mixed
+     * @return  void
+     */
     public function offsetSet($name, $value)
     {
         if (!is_null($name)) {
