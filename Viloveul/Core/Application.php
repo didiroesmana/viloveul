@@ -31,6 +31,8 @@ class Application implements ArrayAccess
      */
     protected $dataOffset = array();
 
+    protected $collections = array();
+
     /**
      * Constructor
      * initialize dependencies.
@@ -41,19 +43,19 @@ class Application implements ArrayAccess
 
         self::$instance = &$this;
 
-        $this['input'] = $this->share(function ($c) {
+        $this->collections['input'] = $this->share(function ($c) {
             return new Http\Input();
         });
 
-        $this['response'] = $this->share(function ($c) {
+        $this->collections['response'] = $this->share(function ($c) {
             return new Http\Response();
         });
 
-        $this['uri'] = $this->share(function ($c) {
+        $this->collections['uri'] = $this->share(function ($c) {
             return new Http\Uri();
         });
 
-        $this['session'] = $this->share(function ($c) {
+        $this->collections['session'] = $this->share(function ($c) {
             $session_name = Configure::read('session_name', function ($value) {
                 return empty($value) ? 'zafex' : $value;
             });
@@ -61,11 +63,11 @@ class Application implements ArrayAccess
             return new Http\Session($session_name);
         });
 
-        $this['dispatcher'] = $this->share(function ($c) use ($realpath) {
-            return new Router\Dispatcher($c['routeCollection'], "{$realpath}/Controllers");
+        $this->collections['dispatcher'] = $this->share(function ($c) use ($realpath) {
+            return new Router\Dispatcher($c->routeCollection, "{$realpath}/Controllers");
         });
 
-        $this['routeCollection'] = $this->share(function ($c) {
+        $this->collections['routeCollection'] = $this->share(function ($c) {
             return new Router\RouteCollection();
         });
 
@@ -85,7 +87,7 @@ class Application implements ArrayAccess
      */
     public function __set($name, $value)
     {
-        $this->offsetSet($name, $value);
+        $this->bind($value, $name);
     }
 
     /**
@@ -98,7 +100,7 @@ class Application implements ArrayAccess
      */
     public function __get($name)
     {
-        return $this->offsetGet($name);
+        return $this->make($name);
     }
 
     /**
@@ -158,6 +160,50 @@ class Application implements ArrayAccess
     public function offsetExists($name)
     {
         return isset($this->dataOffset[$name]);
+    }
+
+    /**
+     * bind
+     *
+     * @param   String
+     * @param   String
+     *
+     * @return  void
+     */
+
+    public function bind($class, $name = null)
+    {
+        if (is_null($name)) {
+            $args = explode('/', str_replace('\\', '/', $class));
+            $name = array_pop($args);
+        }
+
+        $as = lcfirst($name);
+
+        $this->collections[$name] = $this->share(function($c) use($class){
+            return new $class($c);
+        });
+
+        return $this;
+    }
+
+    /**
+     * make
+     *
+     * @param   String
+     *
+     * @return  Object|NULL
+     */
+
+    public function make($name)
+    {
+        if (!array_key_exists($name, $this->collections)) {
+            return null;
+        }
+
+        return $this->isInvokable($this->collections[$name]) ?
+            call_user_func($this->collections[$name], $this) :
+                $this->collections[$name];
     }
 
     /**
