@@ -11,6 +11,7 @@ namespace Viloveul\Core;
 use Exception;
 use ReflectionClass;
 use Viloveul\Database;
+use Viloveul\Configure;
 use ReflectionException;
 
 class Connector

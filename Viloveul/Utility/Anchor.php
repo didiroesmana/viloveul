@@ -8,9 +8,9 @@ namespace Viloveul\Utility;
  * @subpackage  Utility
  */
 
+use Viloveul\Configure;
 use Viloveul\Core\Object;
 use Viloveul\Http\Request;
-use Viloveul\Core\Configure;
 
 class Anchor extends Object
 {

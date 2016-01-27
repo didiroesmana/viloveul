@@ -79,6 +79,7 @@ class Dispatcher
             if (preg_match('#^'.$pattern.'$#i', $request, $matches)) {
                 if (is_string($target)) {
                     $request = preg_replace('#^'.$pattern.'$#i', $target, $request);
+                    // return $this->validate($request);
                     continue;
                 } elseif (is_object($target) && method_exists($target, '__invoke')) {
                     $param_string = implode('/', array_slice($matches, 1));

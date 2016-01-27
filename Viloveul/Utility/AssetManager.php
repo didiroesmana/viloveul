@@ -8,7 +8,7 @@ namespace Viloveul\Utility;
  * @subpackage  Utility
  */
 
-use Viloveul\Core\Configure;
+use Viloveul\Configure;
 
 class AssetManager
 {

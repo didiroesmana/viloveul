@@ -1,6 +1,6 @@
 <?php
 
-namespace Viloveul\Core;
+namespace Viloveul;
 
 /*
  * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
@@ -22,40 +22,50 @@ class Application implements ArrayAccess
      */
     private static $instance;
 
-    protected $realpath = null;
+    private $directory;
 
-    protected $basepath = null;
+    private $basepath;
 
     /**
      * mapping Collections.
      */
     protected $dataOffset = array();
 
-    protected $collections = array();
+    protected $container = array();
 
     /**
      * Constructor
      * initialize dependencies.
      */
-    public function __construct($realpath, $basepath)
+    public function __construct($path, $configs = array())
     {
-        is_null(self::$instance) or die('application has been initialized');
+        is_null(self::$instance) or die('application has been initialized.');
 
-        self::$instance = $this;
+        $directory = realpath($path) or die('application path is not exists.');
 
-        $this->collections['input'] = $this->share(function ($c) {
+        $basepath = realpath($_SERVER['SCRIPT_FILENAME']);
+
+        $this->directory = rtrim(str_replace('\\', '/', $directory), '/');
+
+        $this->basepath = rtrim(str_replace('\\', '/', $basepath), '/');
+
+        spl_autoload_register(array($this, 'autoloadClass'));
+
+        Configure::write($configs);
+
+        $this->container['input'] = $this->share(function ($c) {
             return new Http\Input();
         });
 
-        $this->collections['response'] = $this->share(function ($c) {
+        $this->container['response'] = $this->share(function ($c) {
             return new Http\Response();
         });
 
-        $this->collections['uri'] = $this->share(function ($c) {
+        $this->container['uri'] = $this->share(function ($c) {
             return new Http\Uri();
         });
 
-        $this->collections['session'] = $this->share(function ($c) {
+        $this->container['session'] = $this->share(function ($c) {
             $session_name = Configure::read('session_name', function ($value) {
                 return empty($value) ? 'zafex' : $value;
             });
@@ -63,19 +73,15 @@ class Application implements ArrayAccess
             return new Http\Session($session_name);
         });
 
-        $this->collections['dispatcher'] = $this->share(function ($c) use ($realpath) {
-            return new Router\Dispatcher($c->routeCollection, "{$realpath}/Controllers");
+        $this->container['dispatcher'] = $this->share(function ($c) use ($directory) {
+            return new Router\Dispatcher($c->routeCollection, "{$directory}/Controllers");
         });
 
-        $this->collections['routeCollection'] = $this->share(function ($c) {
+        $this->container['routeCollection'] = $this->share(function ($c) {
             return new Router\RouteCollection();
         });
 
-        $this->realpath = $realpath;
-
-        $this->basepath = $basepath;
-
-        spl_autoload_register(array($this, 'autoloadClass'));
+        self::$instance = $this;
     }
 
     /**
@@ -180,7 +186,7 @@ class Application implements ArrayAccess
 
         $as = lcfirst($name);
 
-        $this->collections[$name] = $this->share(function($c) use($class){
+        $this->container[$name] = $this->share(function($c) use($class){
             return new $class($c);
         });
 
@@ -197,23 +203,23 @@ class Application implements ArrayAccess
 
     public function make($name)
     {
-        if (!array_key_exists($name, $this->collections)) {
+        if (!array_key_exists($name, $this->container)) {
             return null;
         }
 
-        return $this->isInvokable($this->collections[$name]) ?
-            call_user_func($this->collections[$name], $this) :
-                $this->collections[$name];
+        return $this->isInvokable($this->container[$name]) ?
+            call_user_func($this->container[$name], $this) :
+                $this->container[$name];
     }
 
     /**
-     * handle
+     * route
      * add handler for request.
      *
      * @param   [mixed]
      * @param   [mixed]
      */
-    public function handle($arg1, $arg2)
+    public function route($arg1, $arg2)
     {
         $params = func_get_args();
         $handler = array_pop($params);
@@ -232,10 +238,9 @@ class Application implements ArrayAccess
                 }
             }
         } else {
-            foreach ((array) $params[0] as $key) :
+            foreach ((array) $params[0] as $key)
                 $this->routeCollection->has($key)
                     or $this->routeCollection->add($key, $callback);
-            endforeach;
         }
 
         return $this;
@@ -289,13 +294,17 @@ class Application implements ArrayAccess
     {
         $class = ltrim($class, '\\');
         $name = str_replace('\\', '/', $class);
-        $has = false;
 
-        if (0 === strpos($name, 'App/')) {
-            $location = $this->realpath().'/'.substr($name, 4);
+        if (0 === strpos($name, 'Viloveul/')) {
+            $location = __DIR__.'/'.substr($name, 9);
             $this->locateClass($location);
-        } elseif (false === strpos($name, '/')) {
-            $location = $this->realpath().'/Libraries';
+
+        } elseif (0 === strpos($name, 'App/')) {
+            $location = $this->directory.'/'.substr($name, 4);
+            $this->locateClass($location);
+
+         } elseif (false === strpos($name, '/')) {
+            $location = $this->directory.'/Libraries';
 
             /*
              * search file deeper
@@ -347,13 +356,13 @@ class Application implements ArrayAccess
     }
 
     /**
-     * realpath.
+     * directory.
      *
      * @return string
      */
-    public static function realpath()
+    public static function directory()
     {
-        return self::$instance->realpath;
+        return self::$instance->directory;
     }
 
     /**

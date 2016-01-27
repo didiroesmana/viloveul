@@ -1,6 +1,6 @@
 <?php
 
-namespace Viloveul\Core;
+namespace Viloveul;
 
 /**
  * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>

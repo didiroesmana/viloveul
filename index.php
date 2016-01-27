@@ -1,15 +1,12 @@
 <?php
 
-require __DIR__.'/Viloveul/Factory.php';
+require __DIR__.'/Viloveul/Application.php';
 
-Viloveul\Factory::useSystemAutoloader();
+$configs = require __DIR__.'/configs.php';
 
-$app = Viloveul\Factory::serve(
-	__DIR__.'/Project',
-	__DIR__.'/configs.php'
-);
+$app = new Viloveul\Application(__DIR__.'/Project', $configs);
 
-$app->handle('/', function () use ($app) {
+$app->route('/', function () use ($app) {
     return 'Default Handler';
 });
 

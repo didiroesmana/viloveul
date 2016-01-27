@@ -10,7 +10,7 @@ namespace Viloveul\Utility;
 
 use Exception;
 use finfo as FileInfo;
-use Viloveul\Core\Application;
+use Viloveul\Application;
 
 /**
  * Example to use :.
