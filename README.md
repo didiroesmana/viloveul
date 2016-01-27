@@ -5,11 +5,9 @@ Mini PHP MVC with url-routing.
 ### Example to use:
 
 ```php
-require_once 'path-to-viloveul/Viloveul/Factory.php';
+require_once 'path-to-viloveul/Viloveul/Application.php';
 
-Viloveul\Factory::registerSystemAutoloader();
-
-$app = Viloveul\Factory::serve($applicationDirectory);
+$app = new Viloveul\Application($applicationDirectory);
 
 $app->handle('/', function() {
     return "Hello World";
