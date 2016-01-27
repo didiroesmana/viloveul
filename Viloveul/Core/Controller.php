@@ -10,6 +10,7 @@ namespace Viloveul\Core;
 
 use ReflectionMethod;
 use ReflectionException;
+use Viloveul\Application;
 
 abstract class Controller extends Object
 {
@@ -76,9 +77,7 @@ abstract class Controller extends Object
                     return $output;
                 }
 
-                echo $output;
-
-                return true;
+                return print($output);
             }
         } catch (ReflectionException $e) {
             Debugger::handleException($e);
