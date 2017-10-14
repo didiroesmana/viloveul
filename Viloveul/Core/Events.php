@@ -2,69 +2,44 @@
 
 namespace Viloveul\Core;
 
-/**
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+/*
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
+
 class Events
 {
+    /**
+     * @var array
+     */
     protected static $listeners = array();
 
     /**
-     * buildListenerId.
-     *
-     * @param   string event name
-     * @param   callable listener
-     *
-     * @return unique id
-     */
-    protected static function buildListenerId($name, $listener)
-    {
-        if (is_string($listener)) {
-            return $listener;
-        }
-
-        $callback = is_object($listener) ?
-            array($listener, '') :
-                (array) $listener;
-
-        if (is_object($callback[0])) {
-            return spl_object_hash($callback[0]).$callback[1];
-        } elseif (is_string($callback[0])) {
-            return $callback[0].'::'.$callback[1];
-        }
-    }
-
-    /**
-     * addListener.
-     *
-     * @param   string event name
-     * @param   callable listener
-     * @param   int priority
+     * @param $name
+     * @param $listener
+     * @param $priority
      */
     public static function addListener($name, $listener, $priority = 8)
     {
-        $idx = self::buildListenerId($name, $listener, $priority);
-        self::$listeners[$name][$priority][$idx] = $listener;
+        $idx = static::buildListenerId($name, $listener, $priority);
+        static::$listeners[$name][$priority][$idx] = $listener;
     }
 
     /**
-     * trigger.
-     *
-     * @param   string event name
-     * @param   array values
-     *
-     * @return array manipulated values
+     * @param  $name
+     * @param  array   $value
+     * @return mixed
      */
     public static function trigger($name, array $value = array())
     {
-        if (!isset(self::$listeners[$name])) {
+        if (!isset(static::$listeners[$name])) {
             return $value;
         }
 
         $params = $value;
 
         do {
-            foreach ((array) current(self::$listeners[$name]) as $callback) :
+            foreach ((array) current(static::$listeners[$name]) as $callback):
                 if (is_callable($callback)) {
                     $filtered = call_user_func_array($callback, $params);
                     if ($filtered !== null) {
@@ -76,8 +51,28 @@ class Events
                     }
                 }
             endforeach;
-        } while (false !== next(self::$listeners[$name]));
+        } while (false !== next(static::$listeners[$name]));
 
         return $params;
+    }
+
+    /**
+     * @param  $name
+     * @param  $listener
+     * @return mixed
+     */
+    protected static function buildListenerId($name, $listener)
+    {
+        if (is_string($listener)) {
+            return $listener;
+        }
+
+        $callback = is_object($listener) ? [$listener, ''] : (array) $listener;
+
+        if (is_object($callback[0])) {
+            return spl_object_hash($callback[0]) . $callback[1];
+        } elseif (is_string($callback[0])) {
+            return $callback[0] . '::' . $callback[1];
+        }
     }
 }

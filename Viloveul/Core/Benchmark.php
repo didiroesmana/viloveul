@@ -2,43 +2,32 @@
 
 namespace Viloveul\Core;
 
-/**
+/*
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 /**
  * Example to use :.
- * 
+ *
  * \Viloveul\Core\Benchmark::mark('something');
- * 
+ *
  * do stuff
- * 
+ *
  * echo \Viloveul\Core\Benchmark::elapsedTime('something');
  */
+
 class Benchmark
 {
+    /**
+     * @var array
+     */
     protected static $markedPoints = array();
 
     /**
-     * mark.
-     * 
-     * @param	string name
-     * @param	bool overwrite existing point
-     */
-    public static function mark($name, $overwrite = false)
-    {
-        if (!isset(self::$markedPoints[$name]) || true === $overwrite) {
-            self::$markedPoints[$name] = microtime(true);
-        }
-    }
-
-    /**
-     * elapsedTime
-     * calculate elapsed time marked.
-     * 
-     * @param	string marked name
-     * @param	int count decimal
-     *
-     * @return string|int|float benchmarked
+     * @param  $name
+     * @param  $param
+     * @return int
      */
     public static function elapsedTime($name, $param = 4)
     {
@@ -61,5 +50,16 @@ class Benchmark
         }
 
         return 0;
+    }
+
+    /**
+     * @param $name
+     * @param $overwrite
+     */
+    public static function mark($name, $overwrite = false)
+    {
+        if (!isset(self::$markedPoints[$name]) || true === $overwrite) {
+            self::$markedPoints[$name] = microtime(true);
+        }
     }
 }

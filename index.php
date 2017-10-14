@@ -1,13 +1,15 @@
 <?php
 
-require __DIR__.'/Viloveul/Application.php';
+require __DIR__ . '/vendor/autoload.php';
 
-$configs = require __DIR__.'/configs.php';
-
-$app = new Viloveul\Application(__DIR__.'/project', $configs);
+$app = new Viloveul\Application(__DIR__ . '/Project', []);
 
 $app->route('/', function () use ($app) {
     return 'Default Handler';
+});
+
+$app->route('/abc', function () use ($app) {
+    return 'abc';
 });
 
 $app->run();

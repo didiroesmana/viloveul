@@ -2,181 +2,138 @@
 
 namespace Viloveul;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Core
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
-use Exception;
 use ArrayAccess;
+use Closure;
+use Exception;
+use ReflectionException;
+use ReflectionFunction;
+use Viloveul\Core;
 use Viloveul\Http;
 use Viloveul\Router;
-use ReflectionFunction;
-use ReflectionException;
 
 class Application implements ArrayAccess
 {
     /**
-     * current Application instance.
+     * @var array
      */
-    private static $instance;
-
-    private $directory;
-
-    private $basepath;
+    protected $container = array();
 
     /**
      * mapping Collections.
      */
     protected $dataOffset = array();
 
-    protected $container = array();
+    /**
+     * @var mixed
+     */
+    private $basepath;
 
     /**
-     * Constructor
-     * initialize dependencies.
+     * @var mixed
+     */
+    private $directory;
+
+    /**
+     * current Application instance.
+     */
+    private static $instance;
+
+    /**
+     * @param $path
+     * @param array   $configs
      */
     public function __construct($path, $configs = array())
     {
-        is_null(self::$instance) or die('application has been initialized.');
-
         $directory = realpath($path) or die('application path is not exists.');
 
-        $basepath = realpath($_SERVER['SCRIPT_FILENAME']);
+        $basepath = realpath(Core\Configure::server('script_filename'));
 
-        $this->directory = rtrim(str_replace('\\', '/', $directory), '/');
+        $configs['directory'] = rtrim(str_replace('\\', '/', $directory), '/');
 
-        $this->basepath = rtrim(str_replace('\\', '/', $basepath), '/');
+        $configs['basepath'] = rtrim(str_replace('\\', '/', $basepath), '/');
 
-        spl_autoload_register(array($this, 'autoloadClass'));
+        $this->container = new class extends Core\Factory
+        {
 
-        Configure::write($configs);
+        };
 
-        $this->container['input'] = $this->share(function ($c) {
-            return new Http\Input();
-        });
+        Core\Configure::write($configs);
 
-        $this->container['response'] = $this->share(function ($c) {
-            return new Http\Response();
-        });
+        $this->container->alias(Http\Input::class, 'input');
+        $this->container->alias(Http\Response::class, 'response');
+        $this->container->alias(Http\Uri::class, 'uri');
+        $this->container->alias(Http\Session::class, 'session');
+        $this->container->alias(Router\Dispatcher::class, 'dispatcher');
+        $this->container->alias(Router\RouteCollection::class, 'routeCollection');
 
-        $this->container['uri'] = $this->share(function ($c) {
-            return new Http\Uri();
-        });
-
-        $this->container['session'] = $this->share(function ($c) {
-            $session_name = Configure::read('session_name', function ($value) {
+        $this->container[Http\Session::class] = $this->share(function ($c) {
+            $name = Core\Configure::read('session_name', function ($value) {
                 return empty($value) ? 'zafex' : $value;
             });
-
-            return new Http\Session($session_name);
+            return new Http\Session($name);
         });
-
-        $this->container['dispatcher'] = $this->share(function ($c) use ($directory) {
+        $this->container[Router\Dispatcher::class] = $this->share(function ($c) use ($directory) {
             return new Router\Dispatcher($c->routeCollection, "{$directory}/Controllers");
         });
-
-        $this->container['routeCollection'] = $this->share(function ($c) {
+        $this->container[Router\RouteCollection::class] = $this->share(function ($c) {
             return new Router\RouteCollection();
         });
 
-        self::$instance = $this;
+        spl_autoload_register(array($this, 'autoloadClass'));
     }
 
     /**
-     * Setter
-     * its an aliases for offsetSet.
-     *
-     * @param   string collection name
-     * @param   Any value of collection name
-     */
-    public function __set($name, $value)
-    {
-        $this->bind($value, $name);
-    }
-
-    /**
-     * Getter
-     * its an aliases for offsetGet.
-     *
-     * @param   string collection name
-     *
-     * @return Any
+     * @param  $name
+     * @return mixed
      */
     public function __get($name)
     {
-        return $this->make($name);
+        return $this->container->{$name};
     }
 
     /**
-     * offsetSet
-     * implementaion of ArrayAccess.
-     *
-     * @param   string collection name
-     * @param   Any value of collection name
+     * @param $class
      */
-    public function offsetSet($name, $value)
+    public function autoloadClass($class)
     {
-        if (!is_null($name)) {
-            $this->dataOffset[$name] = $value;
+        $class = ltrim($class, '\\');
+        $name = str_replace('\\', '/', $class);
+
+        if (0 === strpos($name, 'App/')) {
+            $location = $this->directory . '/' . substr($name, 4);
+            $this->locateClass($location);
+
+        } elseif (false === strpos($name, '/')) {
+            $location = $this->directory . '/Libraries';
+
+            /*
+             * /var/www/public_html/your_app/Libraries/LibName/SameName/.../SameName/SameName.php
+             */
+
+            do {
+                $location .= '/' . $name;
+                if (false !== $this->locateClass($location)) {
+                    break;
+                }
+            } while (is_dir($location));
         }
     }
 
-    /**
-     * offsetGet
-     * implementaion of ArrayAccess.
-     *
-     * @param   string collection name
-     *
-     * @return Any
-     */
-    public function offsetGet($name)
+    public static function basepath()
     {
-        if (!$this->offsetExists($name)) {
-            return;
-        }
-
-        return $this->isInvokable($this->dataOffset[$name]) ?
-            call_user_func($this->dataOffset[$name], $this) :
-                $this->dataOffset[$name];
+        return self::$instance->basepath;
     }
 
     /**
-     * offsetUnset
-     * implementaion of ArrayAccess.
-     *
-     * @param   string collection name
+     * @param  $class
+     * @param  $name
+     * @return mixed
      */
-    public function offsetUnset($name)
-    {
-        if ($this->offsetExists($name)) {
-            unset($this->dataOffset[$name]);
-        }
-    }
-
-    /**
-     * offsetExists
-     * implementaion of ArrayAccess.
-     *
-     * @param   string collection name
-     *
-     * @return bool
-     */
-    public function offsetExists($name)
-    {
-        return isset($this->dataOffset[$name]);
-    }
-
-    /**
-     * bind
-     *
-     * @param   String
-     * @param   String
-     *
-     * @return  void
-     */
-
     public function bind($class, $name = null)
     {
         if (is_null($name)) {
@@ -186,76 +143,113 @@ class Application implements ArrayAccess
 
         $as = lcfirst($name);
 
-        $this->container[$name] = $this->share(function($c) use($class){
+        $this->container[$name] = $this->share(function ($c) use ($class) {
             return new $class($c);
         });
 
         return $this;
     }
 
-    /**
-     * make
-     *
-     * @param   String
-     *
-     * @return  Object|NULL
-     */
-
-    public function make($name)
+    public static function currentInstance()
     {
-        if (!array_key_exists($name, $this->container)) {
-            return null;
-        }
+        return self::$instance;
+    }
 
-        return $this->isInvokable($this->container[$name]) ?
-            call_user_func($this->container[$name], $this) :
-                $this->container[$name];
+    public static function directory()
+    {
+        return self::$instance->directory;
     }
 
     /**
-     * route
-     * add handler for request.
-     *
-     * @param   [mixed]
-     * @param   [mixed]
+     * @param $object
+     */
+    public function isInvokable($object)
+    {
+        return is_object($object) && method_exists($object, '__invoke');
+    }
+
+    /**
+     * @param $location
+     */
+    public static function locateClass($location)
+    {
+        if (!is_file("{$location}.php")) {
+            return false;
+        }
+        require_once "{$location}.php";
+    }
+
+    /**
+     * @param  $name
+     * @return mixed
+     */
+    public function offsetExists($name)
+    {
+        return $this->container->offsetExists($name);
+    }
+
+    /**
+     * @param  $name
+     * @return mixed
+     */
+    public function offsetGet($name)
+    {
+        return $this->container->offsetGet($name);
+    }
+
+    /**
+     * @param  $name
+     * @param  $value
+     * @return mixed
+     */
+    public function offsetSet($name, $value)
+    {
+        return $this->container->offsetSet($name, $value);
+    }
+
+    /**
+     * @param  $name
+     * @return mixed
+     */
+    public function offsetUnset($name)
+    {
+        return $this->container->offsetUnset($name);
+    }
+
+    /**
+     * @param  $arg1
+     * @param  $arg2
+     * @return mixed
      */
     public function route($arg1, $arg2)
     {
         $params = func_get_args();
         $handler = array_pop($params);
-        $callback = (is_object($handler) && method_exists($handler, 'bindTo')) ?
-            $handler->bindTo($this, $this) :
-                $handler;
+        $callback = (is_object($handler) && method_exists($handler, 'bindTo')) ? $handler->bindTo($this, $this) : $handler;
 
         if (count($params) > 1) {
             $methods = array_shift($params);
             foreach ((array) $methods as $method) {
                 if (Http\Request::isMethod($method) || 'any' === $method) {
                     foreach ((array) $params[0] as $key) {
-                        $this->routeCollection->has($key)
-                            or $this->routeCollection->add($key, $callback);
+                        $this->routeCollection->has($key) or $this->routeCollection->add($key, $callback);
                     }
                 }
             }
         } else {
-            foreach ((array) $params[0] as $key)
+            foreach ((array) $params[0] as $key) {
                 $this->routeCollection->has($key)
-                    or $this->routeCollection->add($key, $callback);
+                or $this->routeCollection->add($key, $callback);
+            }
+
         }
 
         return $this;
     }
 
-    /**
-     * run
-     * execute or running the application.
-     */
     public function run()
     {
-        $this->dispatcher->dispatch(
-            Http\Request::createFromGlobals(),
-            Configure::read('url_suffix')
-        );
+        $this->dispatcher->dispatch(Http\Request::createFromGlobals(), Core\Configure::read('url_suffix'));
 
         $handler = $this->dispatcher->fetchHandler();
 
@@ -268,120 +262,30 @@ class Application implements ArrayAccess
             $output = $reflection->invoke($this->dispatcher->fetchParams());
             $this->response->send($output);
         } catch (ReflectionException $e) {
-            Debugger::handleException($e);
+            Core\Debugger::handleException($e);
         }
     }
 
     /**
-     * isInvokable
-     * check wether value is invokable or not.
-     *
-     * @param   object any
-     *
-     * @return bool
+     * @param  Closure $callback
+     * @return mixed
      */
-    public function isInvokable($object)
+    public function share(Closure $callback)
     {
-        return is_object($object) && method_exists($object, '__invoke');
-    }
+        $handler = function () use ($callback) {
 
-    /**
-     * autoloadClass.
-     *
-     * @param   string
-     */
-    public function autoloadClass($class)
-    {
-        $class = ltrim($class, '\\');
-        $name = str_replace('\\', '/', $class);
-
-        if (0 === strpos($name, 'Viloveul/')) {
-            $location = __DIR__.'/'.substr($name, 9);
-            $this->locateClass($location);
-
-        } elseif (0 === strpos($name, 'App/')) {
-            $location = $this->directory.'/'.substr($name, 4);
-            $this->locateClass($location);
-
-         } elseif (false === strpos($name, '/')) {
-            $location = $this->directory.'/Libraries';
-
-            /*
-             * search file deeper
-             * /var/www/public_html/your_app/Libraries/Name/Name/.../Name/Name.php
+            /**
+             * @var mixed
              */
-
-            do {
-                $location .= '/'.$name;
-                if (false !== $this->locateClass($location)) {
-                    break;
-                }
-            } while (is_dir($location));
-        }
-    }
-
-    /**
-     * locateClass.
-     *
-     * @param   string
-     *
-     * @return bool false when file does not exists
-     */
-    public static function locateClass($location)
-    {
-        if (!is_file("{$location}.php")) {
-            return false;
-        }
-        require_once "{$location}.php";
-    }
-
-    /**
-     * share.
-     *
-     * @param   Closure
-     *
-     * @return object closure
-     */
-    public static function share($callback)
-    {
-        return function ($c) use ($callback) {
             static $object = null;
 
             if (is_null($object)) {
-                $object = $callback($c);
+                $object = $callback($this);
             }
 
             return $object;
         };
-    }
 
-    /**
-     * directory.
-     *
-     * @return string
-     */
-    public static function directory()
-    {
-        return self::$instance->directory;
-    }
-
-    /**
-     * basepath.
-     *
-     * @return string
-     */
-    public static function basepath()
-    {
-        return self::$instance->basepath;
-    }
-
-    /**
-     * &currentInstance.
-     *
-     * @return object application
-     */
-    public static function currentInstance()
-    {
-        return self::$instance;
+        return $handler->bindTo($this, $this);
     }
 }

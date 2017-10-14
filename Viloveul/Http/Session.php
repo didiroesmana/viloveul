@@ -3,21 +3,31 @@
 namespace Viloveul\Http;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Http
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use ArrayAccess;
 
 class Session implements ArrayAccess
 {
-    protected $sessionName = 'zafex';
-
+    /**
+     * @var array
+     */
     protected $flashvars = array();
 
     /**
-     * Constructor.
+     * @var string
+     */
+    protected $sessionName = 'zafex';
+
+    public function &all()
+    {
+        return $_SESSION['__vars'];
+    }
+
+    /**
+     * @param $sessionName
      */
     public function __construct($sessionName)
     {
@@ -63,104 +73,25 @@ class Session implements ArrayAccess
     }
 
     /**
-     * all.
-     *
-     * @return array
+     * @param  $data
+     * @param  $value
+     * @return mixed
      */
-    public function &all()
-    {
-        return $_SESSION['__vars'];
-    }
-
-    /**
-     * set
-     * implement of ArrayAccess.
-     *
-     * @param   string name
-     * @param   value
-     */
-    public function offsetSet($name, $value)
-    {
-        if (!is_null($name)) {
-            $this->set(array($name => $value));
-        }
-    }
-
-    /**
-     * get
-     * implement of ArrayAccess.
-     *
-     * @param   string name
-     *
-     * @return Any
-     */
-    public function offsetGet($name)
-    {
-        return $this->get($name, null);
-    }
-
-    /**
-     * unset
-     * implement of ArrayAccess.
-     *
-     * @param   string name
-     */
-    public function offsetUnset($name)
-    {
-        return $this->delete($name);
-    }
-
-    /**
-     * exists
-     * implement of ArrayAccess.
-     *
-     * @param   string name
-     *
-     * @return bool
-     */
-    public function offsetExists($name)
-    {
-        return $this->has($name);
-    }
-
-    /**
-     * set.
-     *
-     * @param   string name
-     * @param   value
-     */
-    public function set($data, $value = null)
+    public function createFlashdata($data, $value = null)
     {
         if (is_string($data)) {
-            return $this->set(array($data => $value));
+            return $this->createFlashdata(array($data => $value));
         }
 
         foreach ((array) $data as $key => $val) {
-            $_SESSION['__vars'][$key] = $val;
+            $_SESSION['__flashdata'][$key] = $val;
         }
 
         return $this;
     }
 
     /**
-     * get.
-     *
-     * @param   string name
-     * @param   Any default value
-     *
-     * @return Any
-     */
-    public function get($name, $default = null)
-    {
-        return $this->has($name) ?
-            $_SESSION['__vars'][$name] :
-                $default;
-    }
-
-    /**
-     * delete.
-     *
-     * @param   string name
+     * @param $name
      */
     public function delete($name)
     {
@@ -169,21 +100,6 @@ class Session implements ArrayAccess
         }
     }
 
-    /**
-     * has.
-     *
-     * @param   string name
-     *
-     * @return bool
-     */
-    public function has($name)
-    {
-        return array_key_exists($name, $_SESSION['__vars']);
-    }
-
-    /**
-     * destroy.
-     */
     public function destroy()
     {
         if (ini_get('session.use_cookies')) {
@@ -204,50 +120,96 @@ class Session implements ArrayAccess
     }
 
     /**
-     * createFlashdata.
-     *
-     * @param   string key
-     * @param   any
+     * @param  $name
+     * @param  $default
+     * @return mixed
      */
-    public function createFlashdata($data, $value = null)
+    public function get($name, $default = null)
     {
-        if (is_string($data)) {
-            return $this->createFlashdata(array($data => $value));
-        }
+        return $this->has($name) ? $_SESSION['__vars'][$name] : $default;
+    }
 
-        foreach ((array) $data as $key => $val) {
-            $_SESSION['__flashdata'][$key] = $val;
+    /**
+     * @param $name
+     */
+    public function has($name)
+    {
+        return array_key_exists($name, $_SESSION['__vars']);
+    }
+
+    /**
+     * @param  $key
+     * @return mixed
+     */
+    public function keepFlashdata($key)
+    {
+        if (array_key_exists($key, $this->flashvars)) {
+            $_SESSION['__flashdata'][$key] = $this->flashvars[$key];
         }
 
         return $this;
     }
 
     /**
-     * readFlashdata.
-     *
-     * @param   string key
-     * @param   any
-     *
-     * @return any
+     * @param  $name
+     * @return mixed
      */
-    public function readFlashdata($key, $default = null)
+    public function offsetExists($name)
     {
-        return array_key_exists($key, $this->flashvars) ?
-            $this->flashvars[$key] :
-                $default;
+        return $this->has($name);
     }
 
     /**
-     * keepFlashdata.
-     *
-     * @param   string key
-     *
-     * @return boid
+     * @param  $name
+     * @return mixed
      */
-    public function keepFlashdata($key)
+    public function offsetGet($name)
     {
-        if (array_key_exists($key, $this->flashvars)) {
-            $_SESSION['__flashdata'][$key] = $this->flashvars[$key];
+        return $this->get($name, null);
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     */
+    public function offsetSet($name, $value)
+    {
+        if (!is_null($name)) {
+            $this->set(array($name => $value));
+        }
+    }
+
+    /**
+     * @param  $name
+     * @return mixed
+     */
+    public function offsetUnset($name)
+    {
+        return $this->delete($name);
+    }
+
+    /**
+     * @param $key
+     * @param $default
+     */
+    public function readFlashdata($key, $default = null)
+    {
+        return array_key_exists($key, $this->flashvars) ? $this->flashvars[$key] : $default;
+    }
+
+    /**
+     * @param  $data
+     * @param  $value
+     * @return mixed
+     */
+    public function set($data, $value = null)
+    {
+        if (is_string($data)) {
+            return $this->set(array($data => $value));
+        }
+
+        foreach ((array) $data as $key => $val) {
+            $_SESSION['__vars'][$key] = $val;
         }
 
         return $this;

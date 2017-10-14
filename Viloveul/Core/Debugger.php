@@ -3,9 +3,8 @@
 namespace Viloveul\Core;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Core
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use Exception;
@@ -13,42 +12,14 @@ use Exception;
 class Debugger
 {
     /**
-     * printMessage.
-     *
-     * @param   string content message
-     * @param   array backtrace
-     * @param   bool
-     */
-    public static function printMessage($content, array $backtrace = array(), $exit = true)
-    {
-        $output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
-        $output .= $content;
-        if ($backtrace) {
-            $output .= self::calculateBacktrace($backtrace);
-        }
-        $output .= '</div>';
-
-        if (ob_get_level() > 0) {
-            ob_end_flush();
-        }
-
-        echo $output;
-
-        empty($exit) or exit(1);
-    }
-
-    /**
-     * calculateBacktrace.
-     *
-     * @param   array backtrace
-     *
-     * @return string
+     * @param  array   $backtrace
+     * @return mixed
      */
     public static function calculateBacktrace(array $backtrace)
     {
         $output = '';
 
-        foreach ($backtrace as $error) :
+        foreach ($backtrace as $error):
             if (isset($error['file'])) {
                 $output .= '<p style="padding-left: 10px; border-left: 2px dashed #CCCCCC">';
                 $output .= sprintf('%s -> %s : %d', $error['function'], $error['file'], $error['line']);
@@ -60,12 +31,11 @@ class Debugger
     }
 
     /**
-     * handleError.
-     *
-     * @param   string severity message
-     * @param   string data message
-     * @param   string filename
-     * @param   int line number
+     * @param  $severity
+     * @param  $message
+     * @param  $file
+     * @param  $line
+     * @return null
      */
     public static function handleError($severity, $message, $file, $line)
     {
@@ -88,9 +58,7 @@ class Debugger
     }
 
     /**
-     * handleException.
-     *
-     * @param   object Exception
+     * @param Exception $e
      */
     public static function handleException(Exception $e)
     {
@@ -107,16 +75,33 @@ class Debugger
     }
 
     /**
-     * registerErrorHandler.
+     * @param $content
+     * @param array      $backtrace
+     * @param $exit
      */
+    public static function printMessage($content, array $backtrace = array(), $exit = true)
+    {
+        $output = '<div style="border: 1px solid #993300; padding: 15px; margin: 0 0 15px 0;">';
+        $output .= $content;
+        if ($backtrace) {
+            $output .= self::calculateBacktrace($backtrace);
+        }
+        $output .= '</div>';
+
+        if (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+
+        echo $output;
+
+        empty($exit) or exit(1);
+    }
+
     public static function registerErrorHandler()
     {
         set_error_handler(array(__CLASS__, 'handleError'), E_ALL);
     }
 
-    /**
-     * registerExceptionHandler.
-     */
     public static function registerExceptionHandler()
     {
         set_exception_handler(array(__CLASS__, 'handleException'));

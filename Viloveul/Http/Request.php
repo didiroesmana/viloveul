@@ -3,22 +3,19 @@
 namespace Viloveul\Http;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Http
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use Viloveul\Core\Configure;
 
 class Request
 {
+    /**
+     * @var mixed
+     */
     protected static $globalRequest = null;
 
-    /**
-     * createFromGlobals.
-     *
-     * @return string
-     */
     public static function createFromGlobals()
     {
         is_null(self::$globalRequest) and self::resolveGlobalRequest();
@@ -26,22 +23,29 @@ class Request
         return self::$globalRequest;
     }
 
-    /**
-     * resolveGlobalRequest.
-     */
-    public static function resolveGlobalRequest()
+    public static function currenturl()
     {
-        self::$globalRequest = self::isCli() ?
-            self::parseCommandLine() :
-                self::parseRequestUri();
+        $uriString = self::parseRequestUri();
+        $query = Configure::server('query_string');
+
+        return empty($query) ? Configure::siteurl($uriString) : Configure::siteurl("/{$uriString}?{$query}");
     }
 
     /**
-     * isCli
-     * Check if request from command line.
-     *
-     * @return bool
+     * @param $default
      */
+    public static function httpReferer($default = '')
+    {
+        return Configure::server('http_referer', function ($value) use ($default) {
+            return is_null($value) ? $default : $value;
+        });
+    }
+
+    public static function isAjax()
+    {
+        return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
+    }
+
     public static function isCli()
     {
         if (!defined('PHP_SAPI')) {
@@ -52,23 +56,7 @@ class Request
     }
 
     /**
-     * isAjax
-     * Check if request from ajax.
-     *
-     * @return bool
-     */
-    public static function isAjax()
-    {
-        return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
-    }
-
-    /**
-     * isMethod
-     * Compare param with current request.
-     *
-     * @param   string method
-     *
-     * @return bool
+     * @param $option
      */
     public static function isMethod($option)
     {
@@ -79,42 +67,47 @@ class Request
         return Configure::server('request_method', 'strtolower') == $option;
     }
 
-    /**
-     * httpReferer.
-     *
-     * @param   string default value
-     *
-     * @return string http referer
-     */
-    public static function httpReferer($default = '')
+    public static function resolveGlobalRequest()
     {
-        return Configure::server('http_referer', function ($value) use ($default) {
-            return is_null($value) ? $default : $value;
-        });
+        self::$globalRequest = self::isCli() ? self::parseCommandLine() : self::parseRequestUri();
     }
 
     /**
-     * currenturl.
-     *
-     * @return bool
+     * @return mixed
      */
-    public static function currenturl()
+    protected static function parseCommandLine()
     {
-        $uriString = self::parseRequestUri();
-        $query = Configure::server('query_string');
+        /**
+         * @var mixed
+         */
+        static $request = null;
 
-        return empty($query) ?
-            Configure::siteurl($uriString) :
-                Configure::siteurl("/{$uriString}?{$query}");
+        if (is_null($request)) {
+            $request = '/';
+            if (!isset($_SERVER['argv'])) {
+                return $request;
+            }
+
+            $path = isset($_SERVER['argv'][1]) ? '/' . trim($_SERVER['argv'][1], '/') : '/';
+            $query = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : '';
+
+            $request = empty($path) ? '/' : $path;
+
+            $_SERVER['QUERY_STRING'] = $query;
+            parse_str($_SERVER['QUERY_STRING'], $_GET);
+        }
+
+        return $request;
     }
 
     /**
-     * parseRequestUri.
-     *
-     * @return string request
+     * @return mixed
      */
     protected static function parseRequestUri()
     {
+        /**
+         * @var mixed
+         */
         static $request = null;
 
         if (is_null($request)) {
@@ -138,33 +131,6 @@ class Request
                     $path = substr($path, strlen($dirname));
                 }
             }
-
-            $request = empty($path) ? '/' : $path;
-
-            $_SERVER['QUERY_STRING'] = $query;
-            parse_str($_SERVER['QUERY_STRING'], $_GET);
-        }
-
-        return $request;
-    }
-
-    /**
-     * parseCommandLine.
-     *
-     * @return string request
-     */
-    protected static function parseCommandLine()
-    {
-        static $request = null;
-
-        if (is_null($request)) {
-            $request = '/';
-            if (!isset($_SERVER['argv'])) {
-                return $request;
-            }
-
-            $path = isset($_SERVER['argv'][1]) ? '/'.trim($_SERVER['argv'][1], '/') : '/';
-            $query = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : '';
 
             $request = empty($path) ? '/' : $path;
 

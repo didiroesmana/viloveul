@@ -3,9 +3,8 @@
 namespace Viloveul\Http;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Http
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use Viloveul\Core\Configure;
@@ -13,21 +12,23 @@ use Viloveul\Core\View;
 
 class Response
 {
-    protected $output = '';
-
+    /**
+     * @var string
+     */
     protected $contentType = 'text/html';
 
+    /**
+     * @var array
+     */
     protected $headers = array();
 
     /**
-     * Constructor.
+     * @var string
      */
-    public function __construct()
-    {
-    }
+    protected $output = '';
 
     /**
-     * clear.
+     * @return mixed
      */
     public function clear()
     {
@@ -45,10 +46,25 @@ class Response
     }
 
     /**
-     * header.
-     *
-     * @param   string header
-     * @param   bool
+     * @return mixed
+     */
+    public function getContentType()
+    {
+        return $this->contentType;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * @param  $header
+     * @param  $overwrite
+     * @return mixed
      */
     public function httpHeader($header, $overwrite = true)
     {
@@ -58,62 +74,26 @@ class Response
     }
 
     /**
-     * setContentType.
-     *
-     * @param   string content_type
+     * @param $target
      */
-    public function setContentType($contentType)
+    public static function redirect($target)
     {
-        $this->contentType = $contentType;
+        $url = !preg_match('#^\w+\:\/\/#', $target) ? Configure::siteurl($target) : $target;
 
-        return $this;
+        if (!headers_sent()) {
+            header("Location: {$url}");
+            exit();
+        }
+
+        printf('<script type="text/javascript">window.location.href = "%s";</script>', $url);
     }
 
     /**
-     * getContentType.
-     *
-     * @return string content_type
-     */
-    public function getContentType()
-    {
-        return $this->contentType;
-    }
-
-    /**
-     * setOutput.
-     *
-     * @param   string data
-     * @param   bool
-     */
-    public function setOutput($data, $apppend = false)
-    {
-        $output = ($data instanceof View) ? $data->render() : ((string) $data);
-
-        $this->output = (true === $apppend) ?
-            ($this->output.$output) :
-                $output;
-
-        return $this;
-    }
-
-    /**
-     * getOutput.
-     *
-     * @return string output
-     */
-    public function getOutput()
-    {
-        return $this->output;
-    }
-
-    /**
-     * send.
-     *
-     * @param   string output if any
+     * @param $data
      */
     public function send($data = null)
     {
-        is_null($data) or $this->setOutput($data, true);
+        is_null($data) or $this->setOutput($data, false);
 
         if (!headers_sent()) {
             $headers = array_map(
@@ -127,7 +107,7 @@ class Response
                 header($header[0], $header[1]);
             }
 
-            @header('Content-Type: '.$this->contentType, true);
+            @header('Content-Type: ' . $this->contentType, true);
         }
 
         $output = $this->getOutput();
@@ -138,23 +118,27 @@ class Response
     }
 
     /**
-     * redirect.
-     *
-     * @param   string dynamic/static url
-     *
-     * @return string fixed url
+     * @param  $contentType
+     * @return mixed
      */
-    public static function redirect($target)
+    public function setContentType($contentType)
     {
-        $url = !preg_match('#^\w+\:\/\/#', $target) ?
-            Configure::siteurl($target) :
-                $target;
+        $this->contentType = $contentType;
 
-        if (!headers_sent()) {
-            header("Location: {$url}");
-            exit();
-        }
+        return $this;
+    }
 
-        printf('<script type="text/javascript">window.location.href = "%s";</script>', $url);
+    /**
+     * @param  $data
+     * @param  $apppend
+     * @return mixed
+     */
+    public function setOutput($data, $apppend = false)
+    {
+        $output = ($data instanceof View) ? $data->render() : ((string) $data);
+
+        $this->output = (true === $apppend) ? ($this->output . $output) : $output;
+
+        return $this;
     }
 }

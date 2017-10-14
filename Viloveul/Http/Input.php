@@ -2,48 +2,26 @@
 
 namespace Viloveul\Http;
 
-/**
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+/*
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
+
 class Input
 {
-    protected $streams = null;
-
+    /**
+     * @var mixed
+     */
     protected $headers = null;
 
     /**
-     * get.
-     *
-     * @param   string name
-     * @param   [mixed]
-     *
-     * @return [mixed]
+     * @var mixed
      */
-    public function get($name, $default = null)
-    {
-        return array_key_exists($name, $_GET) ? $_GET[$name] : $default;
-    }
+    protected $streams = null;
 
     /**
-     * post.
-     *
-     * @param   string name
-     * @param   [mixed]
-     *
-     * @return [mixed]
-     */
-    public function post($name, $default = null)
-    {
-        return array_key_exists($name, $_POST) ? $_POST[$name] : $default;
-    }
-
-    /**
-     * file.
-     *
-     * @param   string name
-     * @param   array
-     *
-     * @return array
+     * @param $name
+     * @param array   $default
      */
     public function file($name, $default = array())
     {
@@ -51,30 +29,17 @@ class Input
     }
 
     /**
-     * stream.
-     *
-     * @param   string
-     * @param   [mixed]
-     *
-     * @return [mixed]
+     * @param $name
+     * @param $default
      */
-    public function stream($name, $default = null)
+    public function get($name, $default = null)
     {
-        if (null === $this->streams) {
-            parse_str(file_get_contents('php://input'), $this->streams);
-            is_array($this->streams) or ($this->streams = array());
-        }
-
-        return array_key_exists($name, $this->streams) ? $this->streams[$name] : $default;
+        return array_key_exists($name, $_GET) ? $_GET[$name] : $default;
     }
 
     /**
-     * header.
-     *
-     * @param   string
-     * @param   [mixed]
-     *
-     * @return [mixed]
+     * @param $name
+     * @param $default
      */
     public function header($name, $default = null)
     {
@@ -102,25 +67,39 @@ class Input
         return isset($this->headers[$name]) ? $this->headers[$name] : $default;
     }
 
+    public function ipAddress()
+    {
+        return Configure::server('remote_addr');
+    }
+
     /**
-     * via.
-     *
-     * @param   string
-     *
-     * @return bool
+     * @param $name
+     * @param $default
+     */
+    public function post($name, $default = null)
+    {
+        return array_key_exists($name, $_POST) ? $_POST[$name] : $default;
+    }
+
+    /**
+     * @param $name
+     * @param $default
+     */
+    public function stream($name, $default = null)
+    {
+        if (null === $this->streams) {
+            parse_str(file_get_contents('php://input'), $this->streams);
+            is_array($this->streams) or ($this->streams = array());
+        }
+
+        return array_key_exists($name, $this->streams) ? $this->streams[$name] : $default;
+    }
+
+    /**
+     * @param $method
      */
     public function via($method)
     {
         return Request::method('strtolower') == strtolower($method);
-    }
-
-    /**
-     * ipAddress.
-     *
-     * @return string ip address
-     */
-    public function ipAddress()
-    {
-        return Configure::server('remote_addr');
     }
 }

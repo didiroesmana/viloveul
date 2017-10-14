@@ -3,9 +3,8 @@
 namespace Viloveul\Utility;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Utility
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use Viloveul\Configure;

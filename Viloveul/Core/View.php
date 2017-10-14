@@ -3,28 +3,37 @@
 namespace Viloveul\Core;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Core
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
 use Exception;
 
 class View extends Object
 {
-    private static $data = array();
-
-    protected $filename = false;
-
-    protected $vars = array();
-
+    /**
+     * @var mixed
+     */
     protected $directory = null;
 
     /**
-     * Constructor.
-     *
-     * @param   string filename
-     * @param   array vars
+     * @var mixed
+     */
+    protected $filename = false;
+
+    /**
+     * @var array
+     */
+    protected $vars = array();
+
+    /**
+     * @var array
+     */
+    private static $data = array();
+
+    /**
+     * @param $filename
+     * @param array       $vars
      */
     public function __construct($filename, array $vars = array())
     {
@@ -34,9 +43,7 @@ class View extends Object
     }
 
     /**
-     * To String.
-     *
-     * @return string rendered output
+     * @return mixed
      */
     public function __toString()
     {
@@ -44,24 +51,33 @@ class View extends Object
     }
 
     /**
-     * make.
-     *
-     * @param   [mixed] data paramters
-     *
-     * @return string rendered output
+     * @param  $var
+     * @param  $defaultValue
+     * @return mixed
      */
-    public static function make($name, array $data = array())
+    public function get($var, $defaultValue = null)
     {
-        self::globalDataSet($data, null);
+        if (array_key_exists($name, $this->vars)) {
+            return $this->vars[$var];
+        } elseif (array_key_exists($name, self::$data)) {
+            return self::$data[$var];
+        }
 
-        return self::createInstance($name);
+        return $defaultValue;
     }
 
     /**
-     * globalDataSet.
-     *
-     * @param   string|array var(s) name
-     * @param   [mixed]
+     * @param $name
+     * @param $defaultValue
+     */
+    public static function globalDataGet($name, $defaultValue = null)
+    {
+        return array_key_exists($name, self::$data) ? self::$data[$name] : $defaultValue;
+    }
+
+    /**
+     * @param $data
+     * @param $value
      */
     public static function globalDataSet($data, $value = null)
     {
@@ -79,35 +95,29 @@ class View extends Object
     }
 
     /**
-     * globalDataGet.
-     *
-     * @param   string var
-     * @param   Any default value(s)
-     *
-     * @return Any
+     * @param $name
+     * @param array   $data
      */
-    public static function globalDataGet($name, $defaultValue = null)
+    public static function make($name, array $data = array())
     {
-        return array_key_exists($name, self::$data) ? self::$data[$name] : $defaultValue;
+        self::globalDataSet($data, null);
+
+        return self::createInstance($name);
     }
 
     /**
-     * render.
-     *
-     * @param   callable Callback
-     *
-     * @return string rendered output
+     * @param $__local281291callbackFilter
      */
     public function render($__local281291callbackFilter = null)
     {
-        $this->directory = Application::realpath().'/Views';
+        $this->directory = Application::realpath() . '/Views';
 
         $__local281291vars = array_merge(self::$data, $this->vars);
         $__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
-        $__local281291filename = $this->directory.'/'.implode('/', $__local281291fileparts).'.php';
+        $__local281291filename = $this->directory . '/' . implode('/', $__local281291fileparts) . '.php';
 
         if (!is_file($__local281291filename)) {
-            throw new Exception('Unable to locate view : '.$__local281291filename);
+            throw new Exception('Unable to locate view : ' . $__local281291filename);
         }
 
         $__local281291contentFile = $this->loadContentFile($__local281291filename);
@@ -116,41 +126,22 @@ class View extends Object
 
         ob_start();
 
-        eval('?>'.$__local281291contentFile);
+        eval('?>' . $__local281291contentFile);
 
         $__local281291outputRendering = ob_get_clean();
 
         $__local281291trimOutputRendering = trim($__local281291outputRendering);
 
-        return is_callable($__local281291callbackFilter) ?
-            call_user_func($__local281291callbackFilter, $__local281291trimOutputRendering, $this) :
-                $__local281291trimOutputRendering;
-    }
-
-    /**
-     * get.
-     *
-     * @param   string variable name
-     * @param   Any default value
-     *
-     * @return Any value
-     */
-    public function get($var, $defaultValue = null)
-    {
-        if (array_key_exists($name, $this->vars)) {
-            return $this->vars[$var];
-        } elseif (array_key_exists($name, self::$data)) {
-            return self::$data[$var];
+        if (is_callable($__local281291callbackFilter)) {
+            return call_user_func($__local281291callbackFilter, $__local281291trimOutputRendering, $this);
         }
-
-        return $defaultValue;
+        return $__local281291trimOutputRendering;
     }
 
     /**
-     * set.
-     *
-     * @param   string variable name
-     * @param   Any value
+     * @param  $var
+     * @param  $value
+     * @return mixed
      */
     public function set($var, $value = null)
     {
@@ -166,11 +157,8 @@ class View extends Object
     }
 
     /**
-     * filterLoadedContents.
-     *
-     * @param   string content file
-     *
-     * @return string
+     * @param  $contents
+     * @return mixed
      */
     protected function filterLoadedContents($contents = '')
     {
@@ -186,28 +174,19 @@ class View extends Object
     }
 
     /**
-     * handleContentFiltered.
-     *
-     * @param   array matches
-     *
-     * @return string
+     * @param $matches
      */
     protected function handleContentFiltered($matches)
     {
         $filename = trim($matches[1]);
         $path = "{$this->directory}/{$filename}.php";
 
-        return is_file($path) ?
-            $this->loadContentFile($path) :
-                $matches[0];
+        return is_file($path) ? $this->loadContentFile($path) : $matches[0];
     }
 
     /**
-     * loadContentFile.
-     *
-     * @param   string filename
-     *
-     * @return string
+     * @param  $filename
+     * @return mixed
      */
     protected function loadContentFile($filename)
     {

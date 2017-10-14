@@ -3,27 +3,36 @@
 namespace Viloveul\Core;
 
 /*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Core
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
 
-use Exception;
 use ArrayAccess;
-use Viloveul\Database\IConnection;
 
 abstract class Model extends Object implements ArrayAccess
 {
-    private static $modelCollections = array();
-
-    protected $db;
-
+    /**
+     * @var mixed
+     */
     protected $classWrapper;
 
+    /**
+     * @var mixed
+     */
+    protected $db;
+
+    /**
+     * @var array
+     */
     private $dataFields = array();
 
     /**
-     * Constructor.
+     * @var array
+     */
+    private static $modelCollections = array();
+
+    /**
+     * @param $class
      */
     public function __construct($class = __CLASS__)
     {
@@ -35,73 +44,13 @@ abstract class Model extends Object implements ArrayAccess
         }
     }
 
-    /**
-     * dbConnection
-     *
-     * @return  object
-     */
     public function dbConnection()
     {
         return Connector::getConnection();
     }
 
     /**
-     * offsetExistss
-     *
-     * @param   string
-     * @return  Boolean
-     */
-    public function offsetExists($name)
-    {
-        return array_key_exists($name, $this->dataFields) ? true : false;
-    }
-
-    /**
-     * offsetUnset
-     *
-     * @param   string
-     * @return  void
-     */
-    public function offsetUnset($name)
-    {
-        if ($this->offsetExists($name)) {
-            unset($this->dataFields[$name]);
-        }
-    }
-
-    /**
-     * offsetGet
-     *
-     * @param   string
-     * @return  mixed
-     */
-    public function offsetGet($name)
-    {
-        return $this->offsetExists($name) ?
-            $this->dataFields[$name] :
-                null;
-    }
-
-    /**
-     * offsetSet
-     *
-     * @param   string
-     * @param   mixed
-     * @return  void
-     */
-    public function offsetSet($name, $value)
-    {
-        if (!is_null($name)) {
-            $this->dataFields[$name] = $value;
-        }
-    }
-
-    /**
-     * forge.
-     *
-     * @param   [mixed] Boolean or Object
-     *
-     * @return object new|old Instance
+     * @param $param
      */
     public static function forge($param = true)
     {
@@ -118,5 +67,45 @@ abstract class Model extends Object implements ArrayAccess
         }
 
         return self::$modelCollections[$classname];
+    }
+
+    /**
+     * @param $name
+     */
+    public function offsetExists($name)
+    {
+        return array_key_exists($name, $this->dataFields) ? true : false;
+    }
+
+    /**
+     * @param  $name
+     * @return mixed
+     */
+    public function offsetGet($name)
+    {
+        return $this->offsetExists($name) ?
+        $this->dataFields[$name] :
+        null;
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     */
+    public function offsetSet($name, $value)
+    {
+        if (!is_null($name)) {
+            $this->dataFields[$name] = $value;
+        }
+    }
+
+    /**
+     * @param $name
+     */
+    public function offsetUnset($name)
+    {
+        if ($this->offsetExists($name)) {
+            unset($this->dataFields[$name]);
+        }
     }
 }
