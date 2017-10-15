@@ -2,9 +2,14 @@
 
 Micro url-routing.
 
-### Example to use:
+```batch
+$ git clone https://github.com/zafex/viloveul.git
+$ cd viloveul
+$ composer install
 
-firt is composer install
+```
+
+### Example to use:
 
 ```php
 require __DIR__ . '/vendor/autoload.php';
