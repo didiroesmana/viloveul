@@ -125,10 +125,10 @@ class Application
             $this->locateClass($location);
 
         } elseif (false === strpos($name, '/')) {
-            $location = Core\Configure::read('directory') . '/Libraries';
+            $location = Core\Configure::read('directory') . '/Packages';
 
             /**
-             * /var/www/public_html/your_app/Libraries/LibName/SameName/.../SameName/SameName.php
+             * /var/www/public_html/your_app/Packages/LibName/SameName/.../SameName/SameName.php
              */
 
             do {

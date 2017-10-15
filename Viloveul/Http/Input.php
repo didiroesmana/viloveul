@@ -17,7 +17,20 @@ class Input
     /**
      * @var mixed
      */
+    protected $request = null;
+
+    /**
+     * @var mixed
+     */
     protected $streams = null;
+
+    /**
+     * @param Request $request
+     */
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+    }
 
     /**
      * @param $name
@@ -100,6 +113,6 @@ class Input
      */
     public function via($method)
     {
-        return Request::method('strtolower') == strtolower($method);
+        return $this->request->isMethod($method);
     }
 }

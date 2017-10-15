@@ -34,4 +34,24 @@ abstract class Object
     {
         return is_object($name) && method_exists($name, '__invoke');
     }
+
+    /**
+     * @param $param
+     */
+    public static function forge($param = true)
+    {
+        if (false === $param) {
+            return parent::createInstance();
+        }
+
+        $classname = __CLASS__;
+
+        if ($param instanceof $classname) {
+            self::$modelCollections[$classname] = $param;
+        } elseif (!isset(self::$modelCollections[$classname])) {
+            parent::createInstance($param);
+        }
+
+        return self::$modelCollections[$classname];
+    }
 }

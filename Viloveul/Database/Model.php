@@ -1,6 +1,6 @@
 <?php
 
-namespace Viloveul\Core;
+namespace Viloveul\Database;
 
 /**
  * @email fajrulaz@gmail.com
@@ -8,8 +8,9 @@ namespace Viloveul\Core;
  */
 
 use ArrayAccess;
+use Viloveul\Core\Factory;
 
-abstract class Model implements ArrayAccess
+abstract class Model extends Factory implements ArrayAccess
 {
     /**
      * @var mixed
@@ -37,11 +38,6 @@ abstract class Model implements ArrayAccess
     public function __construct($class = __CLASS__)
     {
         $this->db = $this->dbConnection();
-        $this->classWrapper = $class ? $class : __CLASS__;
-
-        if (!isset(self::$modelCollections[__CLASS__])) {
-            self::$modelCollections[__CLASS__] = $this;
-        }
     }
 
     public function dbConnection()
@@ -54,19 +50,7 @@ abstract class Model implements ArrayAccess
      */
     public static function forge($param = true)
     {
-        if (false === $param) {
-            return parent::createInstance();
-        }
-
-        $classname = __CLASS__;
-
-        if ($param instanceof $classname) {
-            self::$modelCollections[$classname] = $param;
-        } elseif (!isset(self::$modelCollections[$classname])) {
-            parent::createInstance($param);
-        }
-
-        return self::$modelCollections[$classname];
+        return static::resolve(get_called_class());
     }
 
     /**
@@ -83,9 +67,7 @@ abstract class Model implements ArrayAccess
      */
     public function offsetGet($name)
     {
-        return $this->offsetExists($name) ?
-        $this->dataFields[$name] :
-        null;
+        return $this->offsetExists($name) ? $this->dataFields[$name] : null;
     }
 
     /**

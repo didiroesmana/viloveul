@@ -59,8 +59,8 @@ class View
     {
         if (array_key_exists($name, $this->vars)) {
             return $this->vars[$var];
-        } elseif (array_key_exists($name, self::$data)) {
-            return self::$data[$var];
+        } elseif (array_key_exists($name, static::$data)) {
+            return static::$data[$var];
         }
 
         return $defaultValue;
@@ -72,7 +72,7 @@ class View
      */
     public static function globalDataGet($name, $defaultValue = null)
     {
-        return array_key_exists($name, self::$data) ? self::$data[$name] : $defaultValue;
+        return array_key_exists($name, static::$data) ? static::$data[$name] : $defaultValue;
     }
 
     /**
@@ -82,14 +82,14 @@ class View
     public static function globalDataSet($data, $value = null)
     {
         if (is_string($data)) {
-            return self::globalDataSet(array($data => $value));
+            return static::globalDataSet(array($data => $value));
         }
 
         foreach ((array) $data as $var => $val) {
-            if (is_null($val) && array_key_exists($var, self::$data)) {
-                unset(self::$data[$var]);
+            if (is_null($val) && array_key_exists($var, static::$data)) {
+                unset(static::$data[$var]);
             } else {
-                self::$data[$var] = $val;
+                static::$data[$var] = $val;
             }
         }
     }
@@ -100,9 +100,9 @@ class View
      */
     public static function make($name, array $data = array())
     {
-        self::globalDataSet($data, null);
+        static::globalDataSet($data, null);
 
-        return self::createInstance($name);
+        return new static($name);
     }
 
     /**
@@ -110,9 +110,9 @@ class View
      */
     public function render($__local281291callbackFilter = null)
     {
-        $this->directory = Application::realpath() . '/Views';
+        $this->directory = Configure::read('directory') . '/Views';
 
-        $__local281291vars = array_merge(self::$data, $this->vars);
+        $__local281291vars = array_merge(static::$data, $this->vars);
         $__local281291fileparts = array_filter(explode('/', $this->filename), 'trim');
         $__local281291filename = $this->directory . '/' . implode('/', $__local281291fileparts) . '.php';
 
