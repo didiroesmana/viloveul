@@ -2,6 +2,8 @@
 
 Micro url-routing.
 
+need php7
+
 ```batch
 $ git clone https://github.com/zafex/viloveul.git
 $ cd viloveul
