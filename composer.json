@@ -7,11 +7,10 @@
         "name": "Fajrul Akbar Zuhdi",
         "email": "fajrulaz@gmail.com"
     }],
-    "keywords": ["framework", "micro", "zafex", "viloveul", "shelVI", "LOVE", "fajrUL"],
+    "keywords": ["framework", "micro", "zafex", "viloveul", "fajrulaz"],
     "minimum-stability": "stable",
     "require": {
         "symfony/var-dumper": "^3.1",
-        "propel/propel": "~2.0@dev"
     },
     "require-dev": {},
     "autoload": {
