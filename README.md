@@ -1,17 +1,32 @@
 # viloveul
 
-Mini PHP MVC with url-routing.
+Micro url-routing.
 
 ### Example to use:
 
+firt is composer install
+
 ```php
-require_once 'path-to-viloveul/Viloveul/Application.php';
+require __DIR__ . '/vendor/autoload.php';
 
-$app = new Viloveul\Application($applicationDirectory);
+$app = new Viloveul\Application(__DIR__ . '/Project', []);
 
-$app->handle('/', function() {
-    return "Hello World";
+$app->route('/', function () use ($app) {
+    return 'Default Handler';
+});
+
+$app->route('/abc', function () use ($app) {
+    return 'abc';
+});
+
+$app->route('post', '/abc(/.*)?', function () use ($app) {
+    return 'post abc sampai z';
+});
+
+$app->route('get', '404', function () use ($app) {
+    return 'ini 404';
 });
 
 $app->run();
+
 ```
