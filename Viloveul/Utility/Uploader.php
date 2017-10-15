@@ -2,15 +2,13 @@
 
 namespace Viloveul\Utility;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Utility
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use Exception;
 use finfo as FileInfo;
-use Viloveul\Application;
 
 /**
  * Example to use :.
@@ -31,53 +29,48 @@ use Viloveul\Application;
  */
 class Uploader
 {
+    /**
+     * @var array
+     */
+    protected $dataUploaded = [];
+
+    /**
+     * @var mixed
+     */
     protected $destination;
 
-    protected $errorMessages = array();
+    /**
+     * @var array
+     */
+    protected $errorMessages = [];
 
-    protected $dataUploaded = array();
-
-    protected $permittedTypes = '*';
-
-    protected $overwrite = false;
-
+    /**
+     * @var string
+     */
     protected $field = 'files';
 
     /**
-     * Constructor.
-     *
-     * @param   string field name
-     * @param   string realpath for destination
+     * @var mixed
      */
-    public function __construct($field = 'files', $destination = null)
+    protected $overwrite = false;
+
+    /**
+     * @var string
+     */
+    protected $permittedTypes = '*';
+
+    /**
+     * @param $field
+     * @param $destination
+     */
+    public function __construct($field = 'files', $destination = '/uploads')
     {
         $this->field = $field;
-        if (is_null($destination)) {
-            $destination = Application::basepath().'/uploads';
-        }
         $this->setDestination($destination);
     }
 
     /**
-     * fetchDataUploaded
-     * its only can be used when data is single.
-     *
-     * @return array
-     */
-    public function fetchDataUploaded()
-    {
-        return isset($this->dataUploaded[0]) ?
-            $this->dataUploaded[0] :
-                array();
-    }
-
-    /**
-     * callHandler
-     * its can be used for single or multiple upload.
-     *
-     * @param   callable callback
-     *
-     * @return Any
+     * @param $callback
      */
     public function callHandler($callback)
     {
@@ -85,23 +78,36 @@ class Uploader
     }
 
     /**
-     * execute.
-     *
-     * @return bool
+     * @param  $prefix
+     * @param  $suffix
+     * @return null
      */
+    public function displayErrors($prefix = '', $suffix = '')
+    {
+        $messages = array_map(
+            function ($message) use ($prefix, $suffix) {
+                return $prefix . $message . $suffix;
+            },
+            $this->errorMessages
+        );
+        echo implode("\n", $messages);
+
+        return;
+    }
+
     public function execute()
     {
         if (empty($this->field)) {
             return false;
         }
 
-        $files = isset($_FILES[$this->field]) ? $_FILES[$this->field] : array();
+        $files = isset($_FILES[$this->field]) ? $_FILES[$this->field] : [];
 
-        $filelist = array();
+        $filelist = [];
 
         if (null !== $files) {
             foreach ($files as $key => $val) {
-                $filelist[$key] = is_array($val) ? $val : array($val);
+                $filelist[$key] = is_array($val) ? $val : [$val];
             }
         }
 
@@ -124,10 +130,36 @@ class Uploader
         return count($this->dataUploaded) > 0;
     }
 
+    public function fetchDataUploaded()
+    {
+        return isset($this->dataUploaded[0]) ? $this->dataUploaded[0] : [];
+    }
+
     /**
-     * overwrite.
-     *
-     * @param   bool value
+     * @return mixed
+     */
+    public function getDestination()
+    {
+        if (empty($this->destination) or !is_dir($this->destination)) {
+            throw new Exception('Destination path does not exists');
+        }
+
+        return $this->destination;
+    }
+
+    public function getPermittedType()
+    {
+        return empty($this->permittedTypes) ? '*' : $this->permittedTypes;
+    }
+
+    public function hasError()
+    {
+        return count($this->errorMessages) > 0;
+    }
+
+    /**
+     * @param  $value
+     * @return mixed
      */
     public function overwrite($value)
     {
@@ -139,9 +171,8 @@ class Uploader
     }
 
     /**
-     * setDestination.
-     *
-     * @param   string value
+     * @param  $destination
+     * @return mixed
      */
     public function setDestination($destination)
     {
@@ -153,116 +184,30 @@ class Uploader
     }
 
     /**
-     * getDestination.
-     *
-     * @return string current destination path
-     */
-    public function getDestination()
-    {
-        if (empty($this->destination) or !is_dir($this->destination)) {
-            throw new Exception('Destination path does not exists');
-        }
-
-        return $this->destination;
-    }
-
-    /**
-     * setPermittedType.
-     *
-     * @param   [mixed] type
+     * @param  $value
+     * @return mixed
      */
     public function setPermittedType($value)
     {
-        $this->permittedTypes = is_string($value) ?
-            implode('|', func_get_args()) :
-                implode('|', (array) $value);
+        $this->permittedTypes = is_string($value) ? implode('|', func_get_args()) : implode('|', (array) $value);
 
         return $this;
     }
 
     /**
-     * getPermittedType.
-     *
-     * @return string
+     * @param $mime
      */
-    public function getPermittedType()
+    protected function detectContentType($mime)
     {
-        return empty($this->permittedTypes) ? '*' : $this->permittedTypes;
+        $parts = explode('/', $mime);
+
+        return in_array($parts[0], array('audio', 'video', 'image', 'application', 'text'), true) ? $parts[0] : 'unknown';
     }
 
     /**
-     * hasError.
-     *
-     * @return bool
-     */
-    public function hasError()
-    {
-        return count($this->errorMessages) > 0;
-    }
-
-    /**
-     * displayErrors.
-     *
-     * @param   string prefix
-     * @param   string suffix
-     */
-    public function displayErrors($prefix = '', $suffix = '')
-    {
-        $messages = array_map(
-            function ($message) use ($prefix,$suffix) {
-                return $prefix.$message.$suffix;
-            },
-            $this->errorMessages
-        );
-        echo implode("\n", $messages);
-
-        return;
-    }
-
-    /**
-     * isAllowed.
-     *
-     * @param   string extension or type
-     *
-     * @return bool
-     */
-    protected function isAllowed($ext)
-    {
-        if ('*' == $this->getPermittedType()) {
-            return true;
-        }
-        $allowedTypes = explode('|', $this->getPermittedType());
-
-        return (boolean) in_array($ext, $allowedTypes, true);
-    }
-
-    /**
-     * isTrueImage.
-     *
-     * @param   string source file
-     * @param   &String width
-     * @param   &String height
-     *
-     * @return bool
-     */
-    protected function isTrueImage($source, &$width = 0, &$height = 0)
-    {
-        $check = @getimagesize($source);
-        if ($check !== false) {
-            $width = $check[0];
-            $height = $check[1];
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * detectMimeType.
-     *
-     * @param   string source file
-     * @param   string data client (mime_type)
+     * @param  $source
+     * @param  $dataClient
+     * @return mixed
      */
     protected function detectMimeType($source, $dataClient)
     {
@@ -281,28 +226,39 @@ class Uploader
     }
 
     /**
-     * detectContentType.
-     *
-     * @param   string source file
-     *
-     * @return string content type
+     * @param $ext
      */
-    protected function detectContentType($mime)
+    protected function isAllowed($ext)
     {
-        $parts = explode('/', $mime);
+        if ('*' == $this->getPermittedType()) {
+            return true;
+        }
+        $allowedTypes = explode('|', $this->getPermittedType());
 
-        return in_array($parts[0], array('audio', 'video', 'image', 'application', 'text'), true) ?
-            $parts[0] :
-                'unknown';
+        return (boolean) in_array($ext, $allowedTypes, true);
     }
 
     /**
-     * parseFilename.
-     *
-     * @param   string client name
-     * @param   string &Extention
-     *
-     * @return string filename
+     * @param $source
+     * @param $width
+     * @param $height
+     */
+    protected function isTrueImage($source, &$width = 0, &$height = 0)
+    {
+        $check = @getimagesize($source);
+        if ($check !== false) {
+            $width = $check[0];
+            $height = $check[1];
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $clientName
+     * @param $ext
      */
     protected function parseFilename($clientName, &$ext = '.txt')
     {
@@ -313,7 +269,7 @@ class Uploader
             if (empty($_ext[0])) {
                 $_name = $_ext[1];
             } else {
-                $ext = '.'.array_pop($_ext);
+                $ext = '.' . array_pop($_ext);
                 $_name = implode('-', $_ext);
             }
         } else {
@@ -324,13 +280,11 @@ class Uploader
     }
 
     /**
-     * process.
-     *
-     * @param   string filename
-     * @param   string mime type
-     * @param   string tmp uploaded path
-     * @param   int size
-     * @param   int error
+     * @param $client_name
+     * @param $client_mime
+     * @param $tmp_name
+     * @param $file_size
+     * @param $upload_error
      */
     protected function process($client_name, $client_mime, $tmp_name, $file_size, $upload_error)
     {
@@ -356,26 +310,26 @@ class Uploader
 
         $directory = date('Y-m-d');
 
-        $uploaded = $directory.' '.date('H:i:s');
+        $uploaded = $directory . ' ' . date('H:i:s');
 
-        $target_path = $this->getDestination().'/'.$directory.'/';
+        $target_path = $this->getDestination() . '/' . $directory . '/';
 
         is_dir($target_path) or @mkdir($target_path, 0777, true);
 
         if (false === $this->overwrite) {
             $copy = 1;
 
-            $filename = $basename.$extention;
+            $filename = $basename . $extention;
 
-            while (file_exists($target_path.$filename)) {
-                $filename = $basename.'-'.(++$copy).$extention;
+            while (file_exists($target_path . $filename)) {
+                $filename = $basename . '-' . (++$copy) . $extention;
             }
         }
 
         // get action
 
         try {
-            move_uploaded_file($tmp_name, $target_path.$filename);
+            move_uploaded_file($tmp_name, $target_path . $filename);
 
             $data = compact(
                 'client_name',
@@ -392,7 +346,7 @@ class Uploader
                 'image_height'
             );
             $data['target_path'] = realpath($target_path);
-            $data['realpath'] = realpath($target_path.$filename);
+            $data['realpath'] = realpath($target_path . $filename);
 
             $this->dataUploaded[] = $data;
         } catch (Exception $e) {

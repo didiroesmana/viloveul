@@ -2,30 +2,59 @@
 
 namespace Viloveul\Utility;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Utility
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
-use Viloveul\Configure;
-use Viloveul\Core\Object;
-use Viloveul\Http\Request;
+use Viloveul\Core\Configure;
+use Viloveul\Core\Factory;
 
-class Anchor extends Object
+class Anchor extends Factory
 {
-    protected $src = '#';
-
-    protected $text = '';
-
-    protected $title = '';
-
+    /**
+     * @var mixed
+     */
     protected $autoActive = false;
 
+    /**
+     * @var mixed
+     */
     protected $htmlAttribute;
 
     /**
-     * Constructor.
+     * @var string
+     */
+    protected $src = '#';
+
+    /**
+     * @var string
+     */
+    protected $text = '';
+
+    /**
+     * @var string
+     */
+    protected $title = '';
+
+    /**
+     * @param  $method
+     * @param  $params
+     * @return mixed
+     */
+    public function __call($method, $params)
+    {
+        if (method_exists($this->htmlAttribute, $method)) {
+            call_user_func_array(array(&$this->htmlAttribute, $method), $params);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $src
+     * @param $text
+     * @param null    $param
      */
     public function __construct($src, $text = null, $param = null)
     {
@@ -42,7 +71,7 @@ class Anchor extends Object
     }
 
     /**
-     * To String.
+     * @return mixed
      */
     public function __toString()
     {
@@ -50,53 +79,8 @@ class Anchor extends Object
     }
 
     /**
-     * Call.
-     *
-     * @param   string method name
-     * @param   array arguments
-     */
-    public function __call($method, $params)
-    {
-        if (method_exists($this->htmlAttribute, $method)) {
-            call_user_func_array(array(&$this->htmlAttribute, $method), $params);
-        }
-
-        return $this;
-    }
-
-    /**
-     * show.
-     *
-     * @return string anchor element
-     */
-    public function show()
-    {
-        if ($this->src == '#') {
-            $src = '#';
-        } else {
-            $src = !preg_match('#^\w+\:\/\/#', $this->src) ?
-                Configure::siteurl($this->src) :
-                    $this->src;
-        }
-
-        $text = empty($this->text) ? $src : $this->text;
-        $title = empty($this->title) ? $text : $this->title;
-
-        if ($this->autoActive === true) {
-            if ($href == Request::currenturl()) {
-                $this->addAttr('class', 'active');
-            }
-        }
-
-        $this->addAttr('title', $title)->addAttr('href', $src);
-
-        return "<a{$this->htmlAttribute}>{$text}</a>";
-    }
-
-    /**
-     * autoActiveClass.
-     *
-     * @param   bool
+     * @param  $value
+     * @return mixed
      */
     public function autoActiveClass($value)
     {
@@ -108,14 +92,34 @@ class Anchor extends Object
     }
 
     /**
-     * create.
-     *
-     * @param   string href
-     *
-     * @return object class
+     * @param $src
+     * @param $text
+     * @param null    $param
      */
     public static function create($src, $text = null, $param = null)
     {
-        return self::createInstance($src, $text, $param);
+        return new static($src, $text, $param);
+    }
+
+    public function show()
+    {
+        if ($this->src == '#') {
+            $src = '#';
+        } else {
+            $src = !preg_match('#^\w+\:\/\/#', $this->src) ? Configure::siteurl($this->src) : $this->src;
+        }
+
+        $text = empty($this->text) ? $src : $this->text;
+        $title = empty($this->title) ? $text : $this->title;
+
+        if ($this->autoActive === true) {
+            if ($href == $this->uri->currentUrl()) {
+                $this->addAttr('class', 'active');
+            }
+        }
+
+        $this->addAttr('title', $title)->addAttr('href', $src);
+
+        return "<a{$this->htmlAttribute}>{$text}</a>";
     }
 }

@@ -12,4 +12,8 @@ $app->route('/abc', function () use ($app) {
     return 'abc';
 });
 
+$app->route('/abc(/.*)?', function () use ($app) {
+    return 'abc sampai z';
+});
+
 $app->run();

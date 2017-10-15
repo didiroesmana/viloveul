@@ -2,42 +2,25 @@
 
 namespace Viloveul\Core;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Core
+/**
+ * @author Fajrul Akbar Zuhdi
+ * @email fajrulaz@gmail.com
  */
-
-use ReflectionClass;
 
 abstract class Object
 {
-    /**
-     * classname.
-     *
-     * @return string called classname
-     */
+    final public static function availableMethods()
+    {
+        return get_class_methods(self::classname());
+    }
+
     final public static function classname()
     {
         return get_called_class();
     }
 
     /**
-     * availableMethods.
-     *
-     * @return array method lists
-     */
-    final public static function availableMethods()
-    {
-        return get_class_methods(self::classname());
-    }
-
-    /**
-     * hasMethod.
-     *
-     * @param   string method name
-     *
-     * @return bool
+     * @param $methodname
      */
     final public static function hasMethod($methodname)
     {
@@ -45,18 +28,10 @@ abstract class Object
     }
 
     /**
-     * createInstance.
-     *
-     * @param   [mixed]
-     *
-     * @return object
+     * @param $name
      */
-    final public static function createInstance($param = null)
+    public function isInvokable($name)
     {
-        $reflectionClass = new ReflectionClass(self::classname());
-
-        return is_null($param) ?
-            $reflectionClass->newInstance() :
-                $reflectionClass->newInstanceArgs(func_get_args());
+        return is_object($name) && method_exists($name, '__invoke');
     }
 }

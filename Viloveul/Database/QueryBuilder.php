@@ -3,72 +3,101 @@
 namespace Viloveul\Database;
 
 /**
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Database
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use Exception;
 
-class QueryBuilder {
-
-    protected $fieldset = array();
-
+class QueryBuilder
+{
+    /**
+     * @var array
+     */
     protected $conditions = array();
 
-    protected $selections = array();
+    /**
+     * @var array
+     */
+    protected $fieldset = array();
 
-    protected $tables = array();
-
-    protected $relations = array();
-
-    protected $orders = array();
-
-    protected $limited = 0;
-
-    protected $offset = 0;
-
+    /**
+     * @var array
+     */
     protected $groups = array();
 
+    /**
+     * @var array
+     */
     protected $havings = array();
 
-    protected $values = array();
+    /**
+     * @var int
+     */
+    protected $limited = 0;
 
+    /**
+     * @var int
+     */
     protected $marker = 0;
 
+    /**
+     * @var int
+     */
+    protected $offset = 0;
+
+    /**
+     * @var array
+     */
+    protected $orders = array();
+
+    /**
+     * @var array
+     */
+    protected $relations = array();
+
+    /**
+     * @var mixed
+     */
     protected $scenario;
 
     /**
-     * Constructor
-     *
-     * @access  public
-     * @param   Object scenario
+     * @var array
      */
-
-    public function __construct(IConnection $scenario) {
-        $this->scenario = $scenario;
-    }
+    protected $selections = array();
 
     /**
-     * Call
-     *
-     * @access  public
-     * @param   String method name
-     * @param   Array parameters
-     * @return  void
+     * @var array
      */
+    protected $tables = array();
 
-    public function __call($method, $params) {
+    /**
+     * @var array
+     */
+    protected $values = array();
+
+    /**
+     * @param $method
+     * @param $params
+     */
+    public function __call($method, $params)
+    {
         return call_user_func_array(array($this->scenario, $method), $params);
     }
 
     /**
-     * clear
-     *
-     * @access  public
+     * @param IConnection $scenario
      */
+    public function __construct(IConnection $scenario)
+    {
+        $this->scenario = $scenario;
+    }
 
-    public function clear() {
+    /**
+     * @return mixed
+     */
+    public function clear()
+    {
         $this->fieldset = array();
         $this->conditions = array();
         $this->selections = array();
@@ -86,52 +115,22 @@ class QueryBuilder {
     }
 
     /**
-     * select
-     *
-     * @access  public
-     * @param   [mixed] String|Array name
-     * @param   Boolean
-     * @return  void
+     * @param  $table
+     * @param  $prepTable
+     * @param  true         $protectIdentifier
+     * @return mixed
      */
-
-    public function select($column, $protectIdentifier = true) {
-        $fields = is_string($column) ?
-            array_map('trim', explode(',', $column)) :
-                (array) $column;
-
-        $selections =& $this->selections;
-
-        array_walk($fields, function($field) use(&$selections, $protectIdentifier){
-            $selections[] = array($field, $protectIdentifier);
-        });
-
-        return $this;
-    }
-
-    /**
-     * from
-     *
-     * @access  public
-     * @param   [mixed] String|Array name
-     * @param   [mixed] Boolean|String
-     * @param   Boolean protectIdentifier
-     */
-
-    public function from($table, $prepTable = true, $protectIdentifier = true) {
+    public function from($table, $prepTable = true, $protectIdentifier = true)
+    {
         $this->tables[] = array($table, $prepTable, $protectIdentifier);
         return $this;
     }
 
-    /**
-     * get
-     *
-     * @access  public
-     * @param   String table
-     */
-
-    public function get() {
-        if (count($this->tables) < 1)
+    public function get()
+    {
+        if (count($this->tables) < 1) {
             throw new Exception('table not selected');
+        }
 
         if (count($this->selections) < 1) {
             $selectionField = '*';
@@ -147,15 +146,13 @@ class QueryBuilder {
                         $selection[0]
                     );
                 } else {
-                    $selections[] = (true === $selection[0]) ?
-                        $this->scenario->protectIdentifier($field) :
-                            $field;
+                    $selections[] = (true === $selection[0]) ? $this->scenario->protectIdentifier($field) : $field;
                 }
             }
             $selectionField = implode(', ', $selections);
         }
 
-        $sql = "SELECT {$selectionField}\n ";
+        $sql = "SELECT {$selectionField} ";
 
         $fromTable = '';
         $tables = array();
@@ -167,63 +164,61 @@ class QueryBuilder {
 
             if ($pos !== false) {
                 if (true === $prepTable) {
-                    $tables[] = $this->trackAliases(
-                        $this->scenario->prepTable(substr($field, 0, $pos), $protect),
-                            $this->scenario->protectIdentifier($tableName);
+                    $tables[] = $this->trackAliases($this->scenario->prepTable(substr($field, 0, $pos), $protect),
+                        $this->scenario->protectIdentifier($tableName));
                 } else {
-                    $tables[] = (true === $prepTable) ?
-                        $this->scenario->prepTable($tableName, false) :
-                            $tableName;
+                    $tables[] = (true === $prepTable) ? $this->scenario->prepTable($tableName, false) : $tableName;
                 }
 
             } else {
                 if (true === $prepTable) {
                     $tables[] = $this->scenario->prepTable($tableName, $protect);
                 } else {
-                    $tables[] = (true === $protect) ?
-                        $this->scenario->protectIdentifier($tableName) :
-                            $tableName;
+                    $tables[] = (true === $protect) ? $this->scenario->protectIdentifier($tableName) : $tableName;
                 }
 
             }
         }
-        $sql .= "FROM {$fromTable}\n ";
-
+        $sql .= "FROM {$fromTable} ";
     }
 
     /**
-     * join
-     *
-     * @access  public
-     * @param   String
-     * @param   String relation
-     * @param   String join mode
-     * @return  void
+     * @param  $table
+     * @param  $on
+     * @param  $mode
+     * @return mixed
      */
-
-    public function join($table, $on, $mode = 'inner') {
+    public function join($table, $on, $mode = 'inner')
+    {
         $this->relations[] = array($table, $on, $mode);
         return $this;
     }
 
     /**
-     * where
-     *
-     * @access  public
-     * @param   String|Array
-     * @param
+     * @param  $column
+     * @param  $protectIdentifier
+     * @return mixed
      */
+    public function select($column, $protectIdentifier = true)
+    {
+        $fields = is_string($column) ? array_map('trim', explode(',', $column)) : (array) $column;
+
+        $selections = &$this->selections;
+
+        array_walk($fields, function ($field) use (&$selections, $protectIdentifier) {
+            $selections[] = array($field, $protectIdentifier);
+        });
+
+        return $this;
+    }
 
     /**
-     * trackAliases
-     *
-     * @access  protected
-     * @param   String field name
-     * @param   Boolean
-     * @return  String field
+     * @param $real
+     * @param $alias
+     * @param $protectIdentifier
      */
-
-    protected function trackAliases($real, $alias, $protectIdentifier = true) {
+    public function trackAliases($real, $alias, $protectIdentifier = true)
+    {
         if (true !== $protectIdentifier) {
             return sprintf('%s AS %s', $real, $alias);
         }
@@ -233,5 +228,4 @@ class QueryBuilder {
             $this->scenario->protectIdentifier($alias)
         );
     }
-
-}
+};

@@ -2,13 +2,10 @@
 
 namespace Viloveul\Utility;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Utility
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
-
-use Viloveul\Core\Object;
 
 /**
  * Example to use :.
@@ -20,16 +17,20 @@ use Viloveul\Core\Object;
  * echo \Viloveul\Utility\Inflector::convert($word)->toUnderscore()->lowercase();
  * ##Result is "hello_world"
  */
-class Inflector extends Object
+class Inflector
 {
-    protected $word;
-
+    /**
+     * @var mixed
+     */
     protected $origin;
 
     /**
-     * Constructor.
-     *
-     * @param   string word
+     * @var mixed
+     */
+    protected $word;
+
+    /**
+     * @param $word
      */
     public function __construct($word)
     {
@@ -37,9 +38,7 @@ class Inflector extends Object
     }
 
     /**
-     * To String.
-     *
-     * @return string current word
+     * @return mixed
      */
     public function __toString()
     {
@@ -47,15 +46,38 @@ class Inflector extends Object
     }
 
     /**
-     * toCamelize.
-     *
-     * @param   string separator to convert
-     *
-     * @return object|string
+     * @param $word
+     */
+    public static function convert($word)
+    {
+        return new static($word);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function lowercase()
+    {
+        $this->word = (defined('MB_ENABLED') && MB_ENABLED) ? mb_strtolower($this->word) : strtolower($this->word);
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function showOrigin()
+    {
+        return $this->origin;
+    }
+
+    /**
+     * @param  $separator
+     * @return mixed
      */
     public function toCamelize($separator = null)
     {
-        $seps = array('-', '_');
+        $seps = ['-', '_'];
         if (!is_null($separator)) {
             $seps = func_get_args();
         }
@@ -66,11 +88,9 @@ class Inflector extends Object
     }
 
     /**
-     * toSlug.
-     *
-     * @param   string separator to used
-     *
-     * @return object|string
+     * @param  $separator
+     * @param  $lowercase
+     * @return mixed
      */
     public function toSlug($separator, $lowercase = true)
     {
@@ -81,9 +101,7 @@ class Inflector extends Object
     }
 
     /**
-     * toUnderscore.
-     *
-     * @return object|string
+     * @return mixed
      */
     public function toUnderscore()
     {
@@ -93,52 +111,12 @@ class Inflector extends Object
     }
 
     /**
-     * lowercase.
-     *
-     * @return object|string
-     */
-    public function lowercase()
-    {
-        $this->word = (defined('MB_ENABLED') && MB_ENABLED) ?
-            mb_strtolower($this->word) :
-                strtolower($this->word);
-
-        return $this;
-    }
-
-    /**
-     * uppercase.
-     *
-     * @return object|string
+     * @return mixed
      */
     public function uppercase()
     {
-        $this->word = (defined('MB_ENABLED') && MB_ENABLED) ?
-            mb_strtoupper($this->word) :
-                strtoupper($this->word);
+        $this->word = (defined('MB_ENABLED') && MB_ENABLED) ? mb_strtoupper($this->word) : strtoupper($this->word);
 
         return $this;
-    }
-
-    /**
-     * showOrigin.
-     *
-     * @return string original word
-     */
-    public function showOrigin()
-    {
-        return $this->origin;
-    }
-
-    /**
-     * convert.
-     *
-     * @param   string word
-     *
-     * @return object|string
-     */
-    public static function convert($word)
-    {
-        return parent::createInstance($word);
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Viloveul\Core;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use ArrayAccess;
@@ -14,7 +14,7 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 
-abstract class Factory implements ArrayAccess
+class Factory implements ArrayAccess
 {
     /**
      * @var array
@@ -56,18 +56,13 @@ abstract class Factory implements ArrayAccess
         }
     }
 
-    public function __construct()
-    {
-        static::$containerInstances[get_called_class()] = $this;
-    }
-
     /**
      * @param $alias
      */
     public function __get($alias)
     {
         if (array_key_exists($alias, static::$instanceAliases)) {
-            return static::resolve(static::$instanceAliases[$alias]);
+            return $this[static::$instanceAliases[$alias]];
         }
         return null;
     }
@@ -76,13 +71,9 @@ abstract class Factory implements ArrayAccess
      * @param $for
      * @param $name
      */
-    public function alias($name, $alias = null)
+    public function alias($name, $class)
     {
-        if (empty($alias)) {
-            $parts = explode('\\', $name);
-            $alias = end($parts);
-        }
-        static::$instanceAliases[lcfirst($alias)] = $name;
+        static::$instanceAliases[$name] = $class;
     }
 
     /**
@@ -108,7 +99,11 @@ abstract class Factory implements ArrayAccess
     public function offsetSet($name, $value)
     {
         if (!is_null($name)) {
-            static::$containerInstances[$name] = $value;
+            if (is_string($value)) {
+                $this->alias($name, $value);
+            } else {
+                static::$containerInstances[$name] = $value;
+            }
         }
     }
 
@@ -126,10 +121,8 @@ abstract class Factory implements ArrayAccess
      * @param $name
      * @param array   $params
      */
-    public static function resolve($name = null, array $params = [])
+    protected static function resolve($class)
     {
-        $class = $name ?: get_called_class();
-
         if (array_key_exists($class, static::$containerInstances)) {
             if (static::$containerInstances[$class] instanceof Closure) {
                 return static::$containerInstances[$class]();
@@ -138,24 +131,15 @@ abstract class Factory implements ArrayAccess
             }
         }
 
-        foreach ($params as $object) {
-            if (is_object($object) && !array_key_exists(get_class($object), static::$containerInstances)) {
-                static::$containerInstances[get_class($object)] = $object;
-            }
-        }
-
         try {
-
             $reflection = new ReflectionClass($class);
             if ($constructor = $reflection->getConstructor()) {
                 if ($parameters = $constructor->getParameters()) {
                     $arguments = [];
                     foreach ($parameters as $parameter) {
-                        $name = $parameter->getName();
+                        $classname = $parameter->getName();
                         if (($type = $parameter->getType()) && !$type->isBuiltin()) {
-                            array_push($arguments, static::resolve($name));
-                        } elseif (array_key_exists($name, $params)) {
-                            array_push($arguments, $params[$name]);
+                            array_push($arguments, static::resolve($type->__toString()));
                         } elseif ($parameter->isDefaultValueAvailable()) {
                             array_push($arguments, $parameter->getDefaultValue());
                         } elseif ($parameter->isArray()) {

@@ -3,12 +3,13 @@
 namespace Viloveul\Utility;
 
 /**
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 /**
  * Example :.
- * 
+ *
  * $configPagination = array(
  *    'total' => 30,                  // count all results
  *    'qs' => true,                   // true for using query string or false for uri segment
@@ -16,18 +17,31 @@ namespace Viloveul\Utility;
  *    'perpage' => 3,                 // limit
  *    'base' => 'http://domain.com'   // output -> http://domain.com/?page=N or http://domain.com/page/N
  * );
- * 
+ *
  * $pagination = new Viloveul\Utility\Pagination($configPagination);
  * $pagination->config('before', '<ul class="pagination pagination-md">')
  * $pagination->config('after', '</ul>')
- * 
+ *
  * echo $pagination->display('<a href=":link" class=":class">:number</a>', '<li class=":class">', '</li>');
- * 
+ *
  * result : [<<] [...] [5] [6] [7] [8] [9] [10] [>>]
  */
 class Pagination
 {
-    protected $configs = array(
+    /**
+     * @var string
+     */
+    protected $afterLink = '';
+
+    /**
+     * @var string
+     */
+    protected $beforeLink = '';
+
+    /**
+     * @var array
+     */
+    protected $configs = [
         'total' => 0,
         'current' => 0,
         'perpage' => 0,
@@ -38,32 +52,25 @@ class Pagination
         'lastlink' => '&raquo;',
         'base' => '',
         'qs' => false,
-    );
-
-    protected $beforeLink = '';
-
-    protected $afterLink = '';
+    ];
 
     /**
-     * Constructor.
-     * 
-     * @param	array configuration
+     * @param array $params
      */
-    public function __construct(array $params = array())
+    public function __construct(array $params = [])
     {
         empty($params) or $this->config($params);
     }
 
     /**
-     * config.
-     * 
-     * @param	string|array
-     * @param	string value
+     * @param  $name
+     * @param  $value
+     * @return mixed
      */
     public function config($name, $value = null)
     {
         if (is_string($name)) {
-            return $this->config(array($name => $value));
+            return $this->config([$name => $value]);
         }
 
         foreach ((array) $name as $key => $val) {
@@ -76,12 +83,8 @@ class Pagination
     }
 
     /**
-     * display.
-     * 
-     * @param	string format link
-     * @param	array wrapper
-     *
-     * @return string output
+     * @param  $string
+     * @return mixed
      */
     public function display($string = '<a href=":link">:number</a>')
     {
@@ -109,49 +112,45 @@ class Pagination
         $this->afterLink = array_shift($params);
 
         if (false === $qs) {
-            $baseurl = rtrim($base, '/').'/page/';
+            $baseurl = rtrim($base, '/') . '/page/';
         } else {
-            $baseurl = (strpos($base, '?') !== false) ? $base.'&page=' : rtrim($base, '/').'/?page=';
+            $baseurl = (strpos($base, '?') !== false) ? $base . '&page=' : rtrim($base, '/') . '/?page=';
         }
 
-        $first = $this->createElement($format, $baseurl.'1', $firstlink, 'first-page');
+        $first = $this->createElement($format, $baseurl . '1', $firstlink, 'first-page');
         if ($start > 1) {
             $first .= $this->createElement($format, '#', '...', 'disabled');
         }
 
-        $last = $this->createElement($format, $baseurl.$end, $lastlink, 'last-page');
+        $last = $this->createElement($format, $baseurl . $end, $lastlink, 'last-page');
         if ($end != $totalPages) {
-            $last = $this->createElement($format, '#', '...', 'disabled').$last;
+            $last = $this->createElement($format, '#', '...', 'disabled') . $last;
         }
 
         for ($numberPage = $start; $numberPage <= $end; ++$numberPage) {
             $output .= $this->createElement(
                 $format,
-                $baseurl.$numberPage,
+                $baseurl . $numberPage,
                 $numberPage,
                 (($numberPage == $current) ? 'active' : '')
             );
         }
 
-        return $before.$first.$output.$last.$after;
+        return $before . $first . $output . $last . $after;
     }
 
     /**
-     * createElement.
-     * 
-     * @param	string format
-     * @param	string url
-     * @param	string text
-     * @param	string classes
-     *
-     * @return string a-element
+     * @param $format
+     * @param $url
+     * @param $text
+     * @param $classes
      */
     protected function createElement($format, $url, $text, $classes)
     {
         return str_replace(
-            array(':link', ':number', ':class'),
-            array($url, $text, $classes),
-            $this->beforeLink.$format.$this->afterLink
+            [':link', ':number', ':class'],
+            [$url, $text, $classes],
+            $this->beforeLink . $format . $this->afterLink
         );
     }
 }

@@ -2,15 +2,15 @@
 
 namespace Viloveul\Router;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Router
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use ReflectionMethod;
+use Viloveul\Core\Factory;
 
-class Dispatcher
+class Dispatcher extends Factory
 {
     /**
      * @var mixed
@@ -30,58 +30,56 @@ class Dispatcher
     /**
      * @var string
      */
-    protected $ns = 'App\\Controllers\\';
+    protected $namespace = 'App\\Controllers\\';
 
     /**
      * @var array
      */
-    protected $params = array();
+    protected $params = [];
 
     /**
      * @var mixed
      */
-    protected $routes;
+    protected $routeCollection;
 
     /**
-     * Constructor.
-     *
-     * @param ArrayAccess instanceof \Viloveul\Core\RouteCollection
+     * @param RouteCollection        $routes
+     * @param $controllerDirectory
      */
     public function __construct(RouteCollection $routes, $controllerDirectory = '/')
     {
-        $this->routes = $routes;
+        $this->routeCollection = $routes;
         $this->controllerDirectory = realpath($controllerDirectory);
     }
 
     /**
-     * dispatch.
-     *
-     * @param string request
+     * @param  $requestUri
+     * @param  $urlSuffix
+     * @return mixed
      */
-    public function dispatch($request_uri, $url_suffix = null)
+    public function dispatch($requestUri, $urlSuffix = null)
     {
         // Make sure the request is started using slash
-        $request = '/' . ltrim($request_uri, '/');
+        $request = '/' . ltrim($requestUri, '/');
 
-        if (!empty($url_suffix) && '/' != $request) {
+        if (!empty($urlSuffix) && '/' != $request) {
             $len = strlen($request);
             $last = substr($request, $len - 1, 1);
 
             if ('/' != $last) {
-                $request = preg_replace('#' . $url_suffix . '$#i', '', $request);
+                $request = preg_replace('#' . $urlSuffix . '$#i', '', $request);
             }
         }
 
-        foreach ($this->routes as $pattern => $target) {
+        foreach ($this->routeCollection as $pattern => $target) {
             if (preg_match('#^' . $pattern . '$#i', $request, $matches)) {
                 if (is_string($target)) {
                     $request = preg_replace('#^' . $pattern . '$#i', $target, $request);
-                    // return $this->validate($request);
                     continue;
                 } elseif (is_object($target) && method_exists($target, '__invoke')) {
                     $param_string = implode('/', array_slice($matches, 1));
                     $this->promote(
-                        function ($args = array()) use ($target) {
+                        function ($args = []) use ($target) {
                             return call_user_func_array($target, $args);
                         },
                         $this->segmentToArray($param_string)
@@ -96,9 +94,7 @@ class Dispatcher
     }
 
     /**
-     * fetchHandler.
-     *
-     * @return Closure handler
+     * @return mixed
      */
     public function fetchHandler()
     {
@@ -106,9 +102,7 @@ class Dispatcher
     }
 
     /**
-     * fetchParams.
-     *
-     * @return array
+     * @return mixed
      */
     public function fetchParams()
     {
@@ -116,16 +110,13 @@ class Dispatcher
     }
 
     /**
-     * createSection.
-     *
-     * @param  string request
-     * @return array  verified sections
+     * @param $request
      */
     protected function createSection($request)
     {
         $sections = $this->segmentToArray($request);
         $path = $this->controllerDirectory;
-        $ns = $this->ns;
+        $namespace = $this->namespace;
 
         $name = null;
 
@@ -135,44 +126,37 @@ class Dispatcher
                 $path .= "/{$name}";
 
                 if (is_dir($path) && !is_file("{$path}.php")) {
-                    $ns .= "{$name}\\";
+                    $namespace .= "{$name}\\";
                     array_shift($sections);
                 }
             } while (next($sections) !== false);
         }
 
         if (empty($sections)) {
-            $sections = is_file("{$path}/{$name}.php") ?
-            array($name, 'index') :
-            array('main', 'index');
+            $sections = is_file("{$path}/{$name}.php") ? [$name, 'index'] : ['main', 'index'];
         } elseif (!isset($sections[1])) {
             $sections[1] = 'index';
         }
 
-        $class = $ns . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[0]))));
-        $method = 'action' . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[1]))));
-        $vars = (count($sections) > 1) ? array_slice($sections, 2) : array();
+        $class = $namespace . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[0]))));
+        $method = 'call' . str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($sections[1]))));
+        $vars = (count($sections) > 1) ? array_slice($sections, 2) : [];
 
-        return array($class, $method, $vars);
+        return [$class, $method, $vars];
     }
 
     /**
-     * promote.
-     *
-     * @param Closure handler
-     * @param array   vars      parameter
+     * @param $handler
+     * @param array      $params
      */
-    protected function promote($handler, array $params = array())
+    protected function promote($handler, array $params = [])
     {
         $this->params = array_filter($params, 'trim');
         $this->handler = $handler;
     }
 
     /**
-     * segmentToArray.
-     *
-     * @param  string
-     * @return array
+     * @param $string_segment
      */
     protected function segmentToArray($string_segment)
     {
@@ -180,9 +164,8 @@ class Dispatcher
     }
 
     /**
-     * Validate.
-     *
-     * @param string request
+     * @param  $request
+     * @return mixed
      */
     protected function validate($request)
     {
@@ -193,14 +176,14 @@ class Dispatcher
             $availableMethods = get_class_methods($class);
             if (in_array('__invoke', $availableMethods, true)) {
                 return $this->promote(
-                    function ($args = array()) use ($class) {
+                    function ($args = []) use ($class) {
                         return call_user_func_array(new $class(), $args);
                     },
                     array_merge(array(substr($method, 6)), $vars)
                 );
             } elseif (in_array($method, $availableMethods, true)) {
                 return $this->promote(
-                    function ($args = array()) use ($class, $method) {
+                    function ($args = []) use ($class, $method) {
                         $reflection = new ReflectionMethod($class, $method);
 
                         return $reflection->invokeArgs(new $class(), $args);
@@ -210,10 +193,10 @@ class Dispatcher
             }
         }
 
-        // Try again with 404_not_found (if any)
-        if ($this->routes->has('404_not_found')) {
-            // create handler from 404_not_found route
-            $e404 = $this->routes->fetch('404_not_found');
+        // Try again with 404 (if any)
+        if ($this->routeCollection->has('404')) {
+            // create handler from 404 route
+            $e404 = $this->routeCollection->fetch('404');
 
             if (is_string($e404)) {
                 list($eClass, $eMethod, $eVars) = $this->createSection($e404);
@@ -222,14 +205,14 @@ class Dispatcher
                     $eAvailableMethods = get_class_methods($eClass);
                     if (in_array('__invoke', $eAvailableMethods, true)) {
                         return $this->promote(
-                            function ($args = array()) use ($eClass) {
+                            function ($args = []) use ($eClass) {
                                 return call_user_func_array(new $eClass(), $args);
                             },
                             preg_split('/\//', $request, -1, PREG_SPLIT_NO_EMPTY)
                         );
                     } elseif (in_array($eMethod, $eAvailableMethods, true)) {
                         return $this->promote(
-                            function ($args = array()) use ($eClass, $eMethod) {
+                            function ($args = []) use ($eClass, $eMethod) {
                                 $reflection = new ReflectionMethod($eClass, $eMethod);
 
                                 return $reflection->invokeArgs(new $eClass(), $args);
@@ -240,7 +223,7 @@ class Dispatcher
                 }
             } elseif (is_object($e404) && method_exists($e404, '__invoke')) {
                 return $this->promote(
-                    function ($args = array()) use ($e404) {
+                    function ($args = []) use ($e404) {
                         return call_user_func_array($e404, $args);
                     },
                     preg_split('/\//', $request, -1, PREG_SPLIT_NO_EMPTY)
@@ -248,7 +231,7 @@ class Dispatcher
             }
         }
 
-        // throw exception if 404_not_found has no route
+        // throw exception if 404 has no route
         throw new NoHandlerException('No Handler for request "' . $request . '"');
     }
 }

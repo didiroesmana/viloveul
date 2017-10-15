@@ -3,40 +3,42 @@
 namespace Viloveul\Database;
 
 /**
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
+
 interface IConnection
 {
-    /**
-     * Setter.
-     */
-    public function __set($name, $table);
-
     /**
      * Getter.
      */
     public function __get($name);
 
     /**
+     * Setter.
+     */
+    public function __set($name, $table);
+
+    /**
+     * command.
+     *
+     * @param string
+     * @param array
+     */
+    public function command($statement, $params);
+
+    /**
      * prepTable.
      *
-     * @param   string
-     * @param   string
+     * @param string
+     * @param string
      */
     public function prepTable($name, $protectIdentifier);
 
     /**
      * protectIdentifier.
      *
-     * @param   string
+     * @param string
      */
     public function protectIdentifier($name);
-
-    /**
-     * command.
-     *
-     * @param   string
-     * @param   array
-     */
-    public function command($statement, $params);
 }

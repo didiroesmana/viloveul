@@ -3,28 +3,40 @@
 namespace Viloveul\Utility;
 
 /**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
+ */
+
+/**
  * Example :.
- * 
+ *
  * $attribute = new Viloveul\Utility\HtmlAttribute;
  * $attribute->addAttr('data', 'name', 'My Name')->addAttr('title', 'Some Title');
  * $attribute->addAttr('name', 'The Name');
- * 
+ *
  * echo "<a{$attribute}">Text</a>";
- * 
+ *
  * result : <a title="Some Title" name="The Name" data-name="My Name">Text</a>
  */
 class HtmlAttribute
 {
-    protected $classes = array();
-
-    protected $attributes = array();
-
-    protected $dataAttributes = array();
+    /**
+     * @var array
+     */
+    protected $attributes = [];
 
     /**
-     * To String.
-     * 
-     * @return string
+     * @var array
+     */
+    protected $classes = [];
+
+    /**
+     * @var array
+     */
+    protected $dataAttributes = [];
+
+    /**
+     * @return mixed
      */
     public function __toString()
     {
@@ -32,10 +44,10 @@ class HtmlAttribute
     }
 
     /**
-     * addAttr.
-     * 
-     * @param	array|string name
-     * @param	[mixed]
+     * @param  $data
+     * @param  $value
+     * @param  $param
+     * @return mixed
      */
     public function addAttr($data, $value = '', $param = null)
     {
@@ -50,7 +62,7 @@ class HtmlAttribute
                 $classes = is_null($param) ? $value : array_slice(func_get_args(), 1);
                 $this->addClass($classes);
             } else {
-                $this->addAttr(array($data => $value));
+                $this->addAttr([$data => $value]);
             }
 
             return $this;
@@ -71,33 +83,8 @@ class HtmlAttribute
     }
 
     /**
-     * removeAttr.
-     * 
-     * @param	string key
-     * @param	[mixed]
-     */
-    public function removeAttr($data, $part = null)
-    {
-        if ($data == 'data') {
-            if (empty($part)) {
-                $this->dataAttributes = array();
-            } elseif (isset($this->dataAttributes[$part])) {
-                unset($this->dataAttributes[$part]);
-            }
-        } elseif ($data == 'class') {
-            $this->classes = array();
-        } elseif (isset($this->attributes[$data])) {
-            unset($this->attributes[$data]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * addClass.
-     * 
-     * @param	array|string class
-     * @param	[mixed]
+     * @param  $value
+     * @return mixed
      */
     public function addClass($value)
     {
@@ -114,10 +101,30 @@ class HtmlAttribute
     }
 
     /**
-     * removeClass.
-     * 
-     * @param	array|string class(es)
-     * @param	[mixed]
+     * @param  $data
+     * @param  $part
+     * @return mixed
+     */
+    public function removeAttr($data, $part = null)
+    {
+        if ($data == 'data') {
+            if (empty($part)) {
+                $this->dataAttributes = [];
+            } elseif (isset($this->dataAttributes[$part])) {
+                unset($this->dataAttributes[$part]);
+            }
+        } elseif ($data == 'class') {
+            $this->classes = [];
+        } elseif (isset($this->attributes[$data])) {
+            unset($this->attributes[$data]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param  $value
+     * @return mixed
      */
     public function removeClass($value)
     {
@@ -132,9 +139,7 @@ class HtmlAttribute
     }
 
     /**
-     * stringify.
-     * 
-     * @return string
+     * @return mixed
      */
     public function stringify()
     {
@@ -148,7 +153,7 @@ class HtmlAttribute
 
         if (!empty($this->classes)) {
             $classes = array_filter($this->classes, 'trim');
-            $attr .= ' class="'.implode(' ', array_unique($classes)).'"';
+            $attr .= ' class="' . implode(' ', array_unique($classes)) . '"';
         }
 
         if (!empty($this->dataAttributes)) {

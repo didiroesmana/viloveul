@@ -7,7 +7,6 @@ namespace Viloveul;
  * @author Fajrul Akbar Zuhdi
  */
 
-use ArrayAccess;
 use Closure;
 use Exception;
 use ReflectionException;
@@ -16,17 +15,22 @@ use Viloveul\Core;
 use Viloveul\Http;
 use Viloveul\Router;
 
-class Application implements ArrayAccess
+class Application
 {
     /**
      * @var array
      */
-    protected $container = array();
+    protected $container = [];
 
     /**
      * mapping Collections.
      */
-    protected $dataOffset = array();
+    protected $dataOffset = [];
+
+    /**
+     * current Application instance.
+     */
+    private static $app;
 
     /**
      * @var mixed
@@ -39,15 +43,10 @@ class Application implements ArrayAccess
     private $directory;
 
     /**
-     * current Application instance.
-     */
-    private static $instance;
-
-    /**
      * @param $path
      * @param array   $configs
      */
-    public function __construct($path, $configs = array())
+    public function __construct($path, array $configs = [])
     {
         $directory = realpath($path) or die('application path is not exists.');
 
@@ -57,19 +56,22 @@ class Application implements ArrayAccess
 
         $configs['basepath'] = rtrim(str_replace('\\', '/', $basepath), '/');
 
+        // factory di extends ke anonymous class biar ngga ke-register di container
+
         $this->container = new class extends Core\Factory
         {
-
+            // do nothing
         };
 
         Core\Configure::write($configs);
 
-        $this->container->alias(Http\Input::class, 'input');
-        $this->container->alias(Http\Response::class, 'response');
-        $this->container->alias(Http\Uri::class, 'uri');
-        $this->container->alias(Http\Session::class, 'session');
-        $this->container->alias(Router\Dispatcher::class, 'dispatcher');
-        $this->container->alias(Router\RouteCollection::class, 'routeCollection');
+        $this->container->alias('uri', Http\Uri::class);
+        $this->container->alias('input', Http\Input::class);
+        $this->container->alias('request', Http\Request::class);
+        $this->container->alias('response', Http\Response::class);
+        $this->container->alias('session', Http\Session::class);
+        $this->container->alias('dispatcher', Router\Dispatcher::class);
+        $this->container->alias('routeCollection', Router\RouteCollection::class);
 
         $this->container[Http\Session::class] = $this->share(function ($c) {
             $name = Core\Configure::read('session_name', function ($value) {
@@ -77,14 +79,18 @@ class Application implements ArrayAccess
             });
             return new Http\Session($name);
         });
-        $this->container[Router\Dispatcher::class] = $this->share(function ($c) use ($directory) {
-            return new Router\Dispatcher($c->routeCollection, "{$directory}/Controllers");
+
+        $this->container[Router\Dispatcher::class] = $this->share(function ($c) use ($configs) {
+            return new Router\Dispatcher($c->routeCollection, "{$configs['directory']}/Controllers");
         });
+
         $this->container[Router\RouteCollection::class] = $this->share(function ($c) {
             return new Router\RouteCollection();
         });
 
-        spl_autoload_register(array($this, 'autoloadClass'));
+        spl_autoload_register([$this, 'autoload']);
+
+        static::$app = &$this;
     }
 
     /**
@@ -97,21 +103,31 @@ class Application implements ArrayAccess
     }
 
     /**
+     * @param  $name
+     * @param  $value
+     * @return mixed
+     */
+    public function __set($name, $value)
+    {
+        return $this->container[$name] = $value;
+    }
+
+    /**
      * @param $class
      */
-    public function autoloadClass($class)
+    public function autoload($class)
     {
         $class = ltrim($class, '\\');
         $name = str_replace('\\', '/', $class);
 
         if (0 === strpos($name, 'App/')) {
-            $location = $this->directory . '/' . substr($name, 4);
+            $location = Core\Configure::read('directory') . '/' . substr($name, 4);
             $this->locateClass($location);
 
         } elseif (false === strpos($name, '/')) {
-            $location = $this->directory . '/Libraries';
+            $location = Core\Configure::read('directory') . '/Libraries';
 
-            /*
+            /**
              * /var/www/public_html/your_app/Libraries/LibName/SameName/.../SameName/SameName.php
              */
 
@@ -122,50 +138,6 @@ class Application implements ArrayAccess
                 }
             } while (is_dir($location));
         }
-    }
-
-    public static function basepath()
-    {
-        return self::$instance->basepath;
-    }
-
-    /**
-     * @param  $class
-     * @param  $name
-     * @return mixed
-     */
-    public function bind($class, $name = null)
-    {
-        if (is_null($name)) {
-            $args = explode('/', str_replace('\\', '/', $class));
-            $name = array_pop($args);
-        }
-
-        $as = lcfirst($name);
-
-        $this->container[$name] = $this->share(function ($c) use ($class) {
-            return new $class($c);
-        });
-
-        return $this;
-    }
-
-    public static function currentInstance()
-    {
-        return self::$instance;
-    }
-
-    public static function directory()
-    {
-        return self::$instance->directory;
-    }
-
-    /**
-     * @param $object
-     */
-    public function isInvokable($object)
-    {
-        return is_object($object) && method_exists($object, '__invoke');
     }
 
     /**
@@ -180,43 +152,18 @@ class Application implements ArrayAccess
     }
 
     /**
-     * @param  $name
-     * @return mixed
-     */
-    public function offsetExists($name)
-    {
-        return $this->container->offsetExists($name);
-    }
-
-    /**
-     * @param  $name
-     * @return mixed
-     */
-    public function offsetGet($name)
-    {
-        return $this->container->offsetGet($name);
-    }
-
-    /**
-     * @param  $name
-     * @param  $value
-     * @return mixed
-     */
-    public function offsetSet($name, $value)
-    {
-        return $this->container->offsetSet($name, $value);
-    }
-
-    /**
-     * @param  $name
-     * @return mixed
-     */
-    public function offsetUnset($name)
-    {
-        return $this->container->offsetUnset($name);
-    }
-
-    /**
+     * any request method
+     * $app->route('/', function(){ });
+     *
+     * spesifik
+     * $app->route('get', '/', function(){ });
+     *
+     * more than one but not any
+     * $app->route(['get', 'post', 'delete'], '/', function(){ });
+     *
+     * routing can be array
+     * $app->route('any', ['/', '/home'], function(){ });
+     *
      * @param  $arg1
      * @param  $arg2
      * @return mixed
@@ -230,7 +177,7 @@ class Application implements ArrayAccess
         if (count($params) > 1) {
             $methods = array_shift($params);
             foreach ((array) $methods as $method) {
-                if (Http\Request::isMethod($method) || 'any' === $method) {
+                if ($this->request->isMethod($method) || 'any' === $method) {
                     foreach ((array) $params[0] as $key) {
                         $this->routeCollection->has($key) or $this->routeCollection->add($key, $callback);
                     }
@@ -238,8 +185,7 @@ class Application implements ArrayAccess
             }
         } else {
             foreach ((array) $params[0] as $key) {
-                $this->routeCollection->has($key)
-                or $this->routeCollection->add($key, $callback);
+                $this->routeCollection->has($key) or $this->routeCollection->add($key, $callback);
             }
 
         }
@@ -249,7 +195,10 @@ class Application implements ArrayAccess
 
     public function run()
     {
-        $this->dispatcher->dispatch(Http\Request::createFromGlobals(), Core\Configure::read('url_suffix'));
+        $this->dispatcher->dispatch(
+            $this->request->createFromGlobals(),
+            Core\Configure::read('url_suffix')
+        );
 
         $handler = $this->dispatcher->fetchHandler();
 

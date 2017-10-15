@@ -2,9 +2,9 @@
 
 namespace Viloveul\Http;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use Viloveul\Core\Configure;
@@ -16,37 +16,32 @@ class Request
      */
     protected static $globalRequest = null;
 
-    public static function createFromGlobals()
+    /**
+     * @var mixed
+     */
+    protected $uri;
+
+    /**
+     * @param Uri $uri
+     */
+    public function __construct(Uri $uri)
     {
-        is_null(self::$globalRequest) and self::resolveGlobalRequest();
+        $this->uri = $uri;
+    }
+
+    public function createFromGlobals()
+    {
+        is_null(self::$globalRequest) and $this->resolveGlobalRequest();
 
         return self::$globalRequest;
     }
 
-    public static function currenturl()
-    {
-        $uriString = self::parseRequestUri();
-        $query = Configure::server('query_string');
-
-        return empty($query) ? Configure::siteurl($uriString) : Configure::siteurl("/{$uriString}?{$query}");
-    }
-
-    /**
-     * @param $default
-     */
-    public static function httpReferer($default = '')
-    {
-        return Configure::server('http_referer', function ($value) use ($default) {
-            return is_null($value) ? $default : $value;
-        });
-    }
-
-    public static function isAjax()
+    public function isAjax()
     {
         return Configure::server('http_x_requested_with', 'strtolower') == 'xmlhttprequest';
     }
 
-    public static function isCli()
+    public function isCli()
     {
         if (!defined('PHP_SAPI')) {
             return false;
@@ -58,7 +53,7 @@ class Request
     /**
      * @param $option
      */
-    public static function isMethod($option)
+    public function isMethod($option)
     {
         if (in_array($option, array('put', 'patch', 'delete', 'options'))) {
             return isset($_POST['_METHOD']) && strtolower($_POST['_METHOD']) == $option;
@@ -67,15 +62,10 @@ class Request
         return Configure::server('request_method', 'strtolower') == $option;
     }
 
-    public static function resolveGlobalRequest()
-    {
-        self::$globalRequest = self::isCli() ? self::parseCommandLine() : self::parseRequestUri();
-    }
-
     /**
      * @return mixed
      */
-    protected static function parseCommandLine()
+    protected function parseCommandLine()
     {
         /**
          * @var mixed
@@ -100,44 +90,8 @@ class Request
         return $request;
     }
 
-    /**
-     * @return mixed
-     */
-    protected static function parseRequestUri()
+    protected function resolveGlobalRequest()
     {
-        /**
-         * @var mixed
-         */
-        static $request = null;
-
-        if (is_null($request)) {
-            $request = '/';
-
-            if (!isset($_SERVER['REQUEST_URI'], $_SERVER['SCRIPT_NAME'])) {
-                return $request;
-            }
-
-            $parts = parse_url($_SERVER['REQUEST_URI']);
-
-            $path = isset($parts['path']) ? $parts['path'] : '/';
-            $query = isset($parts['query']) ? $parts['query'] : '';
-            $script = $_SERVER['SCRIPT_NAME'];
-
-            if (0 === strpos($path, $script)) {
-                $path = substr($path, strlen($script));
-            } else {
-                $dirname = dirname($script);
-                if (0 === strpos($path, $dirname)) {
-                    $path = substr($path, strlen($dirname));
-                }
-            }
-
-            $request = empty($path) ? '/' : $path;
-
-            $_SERVER['QUERY_STRING'] = $query;
-            parse_str($_SERVER['QUERY_STRING'], $_GET);
-        }
-
-        return $request;
+        self::$globalRequest = $this->isCli() ? $this->parseCommandLine() : $this->uri->createRequest();
     }
 }

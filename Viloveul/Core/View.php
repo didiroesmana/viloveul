@@ -2,14 +2,14 @@
 
 namespace Viloveul\Core;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use Exception;
 
-class View extends Object
+class View
 {
     /**
      * @var mixed

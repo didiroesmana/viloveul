@@ -2,14 +2,14 @@
 
 namespace Viloveul\Core;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use ArrayAccess;
 
-abstract class Model extends Object implements ArrayAccess
+abstract class Model implements ArrayAccess
 {
     /**
      * @var mixed

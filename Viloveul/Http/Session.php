@@ -2,9 +2,9 @@
 
 namespace Viloveul\Http;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use ArrayAccess;

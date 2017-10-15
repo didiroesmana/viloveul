@@ -2,90 +2,66 @@
 
 namespace Viloveul\Router;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Router
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 use Iterator;
 
 class RouteCollection implements Iterator
 {
-    protected $collections = array();
+    /**
+     * @var array
+     */
+    protected $collections = [];
 
     /**
-     * add.
-     *
-     * @param   string
-     * @param   string|object
+     * @param $pattern
+     * @param $handler
      */
     public function add($pattern, $handler)
     {
         $this->collections[$pattern] = $handler;
     }
 
-    /**
-     * has.
-     *
-     * @param   string
-     *
-     * @return bool
-     */
-    public function has($pattern)
-    {
-        return array_key_exists($pattern, $this->collections);
-    }
-
-    /**
-     * fetch.
-     *
-     * @param   string
-     *
-     * @return string|object|null
-     */
-    public function fetch($pattern)
-    {
-        return $this->has($pattern) ?
-            $this->collections[$pattern] :
-                null;
-    }
-
-    /**
-     * Implements of Iterator.
-     */
     public function current()
     {
         return current($this->collections);
     }
 
     /**
-     * Implements of Iterator.
+     * @param  $pattern
+     * @return mixed
      */
+    public function fetch($pattern)
+    {
+        return $this->has($pattern) ? $this->collections[$pattern] : null;
+    }
+
+    /**
+     * @param $pattern
+     */
+    public function has($pattern)
+    {
+        return array_key_exists($pattern, $this->collections);
+    }
+
     public function key()
     {
         return key($this->collections);
     }
 
-    /**
-     * Implements of Iterator.
-     */
     public function next()
     {
         next($this->collections);
     }
 
-    /**
-     * Implements of Iterator.
-     */
     public function rewind()
     {
         reset($this->collections);
     }
 
-    /**
-     * Implements of Iterator.
-     */
     public function valid()
     {
         return null !== $this->key();

@@ -2,21 +2,26 @@
 
 namespace Viloveul\Database;
 
-/*
- * @author      Fajrul Akbar Zuhdi <fajrulaz@gmail.com>
- * @package     Viloveul
- * @subpackage  Database
+/**
+ * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
-use PDO;
 use Exception;
+use PDO;
 use PDOException;
 
 class Scenario extends PDO implements IConnection
 {
-    protected $tables = array();
-
+    /**
+     * @var mixed
+     */
     protected $prefix;
+
+    /**
+     * @var array
+     */
+    protected $tables = array();
 
     /**
      * Constructor.
@@ -34,10 +39,21 @@ class Scenario extends PDO implements IConnection
     }
 
     /**
+     * Getter.
+     *
+     * @Param  String name
+     * @return string prefixed table name
+     */
+    public function __get($name)
+    {
+        return isset($this->tables[$name]) ? $this->tables[$name] : $this->prepTable($name);
+    }
+
+    /**
      * Setter.
      *
-     * @param   string name
-     * @param   string table name
+     * @param string name
+     * @param string table  name
      */
     public function __set($name, $table)
     {
@@ -45,56 +61,29 @@ class Scenario extends PDO implements IConnection
     }
 
     /**
-     * Getter.
+     * command.
      *
-     * @Param   String name
-     *
-     * @return string prefixed table name
+     * @param  string sql           statement
+     * @param  array  bind-params
+     * @return object query
      */
-    public function __get($name)
+    public function command($statement, $params = array())
     {
-        return isset($this->tables[$name]) ?
-            $this->tables[$name] :
-                $this->prepTable($name);
-    }
+        try {
+            $query = $this->prepare($statement);
+            $query->execute($params);
 
-    /**
-     * prepTable.
-     *
-     * @param   string table name
-     *
-     * @return string table name with table prefix
-     */
-    public function prepTable($name, $protectIdentifier = true)
-    {
-        return (true === $protectIdentifier) ?
-            $this->protectIdentifier($this->prefix.$name) :
-                $this->prefix.$name;
-    }
+            return $query;
 
-    /**
-     * protectIdentifier.
-     *
-     * @param   string name
-     *
-     * @return string protected name with identifier
-     */
-    public function protectIdentifier($name)
-    {
-        if (strpos($name, '(') !== false) {
-            preg_match('#(.+)\((.+)\)#', $name, $match);
-
-            return $match[1].'('.$this->protectIdentifier($match[2]).')';
+        } catch (PDOException $e) {
+            throw new Exception($e->getMessage());
         }
-
-        return implode('.', array_map(array($this, 'createIdentifier'), explode('.', $name)));
     }
 
     /**
      * createIdentifier.
      *
-     * @param   string name
-     *
+     * @param  string name
      * @return string name
      */
     public function createIdentifier($name)
@@ -115,22 +104,30 @@ class Scenario extends PDO implements IConnection
     }
 
     /**
-     * command.
+     * prepTable.
      *
-     * @param   string sql statement
-     * @param   array bind-params
-     *
-     * @return object query
+     * @param  string table name
+     * @return string table name with table prefix
      */
-    public function command($statement, $params = array())
+    public function prepTable($name, $protectIdentifier = true)
     {
-        try {
-            $query = $this->prepare($statement);
-            $query->execute($params);
+        return (true === $protectIdentifier) ? $this->protectIdentifier($this->prefix . $name) : $this->prefix . $name;
+    }
 
-            return $query;
-        } catch (PDOException $e) {
-            throw new Exception($e->getMessage());
+    /**
+     * protectIdentifier.
+     *
+     * @param  string name
+     * @return string protected name with identifier
+     */
+    public function protectIdentifier($name)
+    {
+        if (strpos($name, '(') !== false) {
+            preg_match('#(.+)\((.+)\)#', $name, $match);
+
+            return $match[1] . '(' . $this->protectIdentifier($match[2]) . ')';
         }
+
+        return implode('.', array_map(array($this, 'createIdentifier'), explode('.', $name)));
     }
 }

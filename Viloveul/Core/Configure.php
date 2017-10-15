@@ -2,9 +2,9 @@
 
 namespace Viloveul\Core;
 
-/*
- * @author Fajrul Akbar Zuhdi
+/**
  * @email fajrulaz@gmail.com
+ * @author Fajrul Akbar Zuhdi
  */
 
 class Configure
